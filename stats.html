@@ -3,12 +3,81 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VALOGUIDE</title>
+  <title>Stats — VALOGUIDE</title>
   <link rel="stylesheet" href="src/styles/main.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    .search-section{padding:100px 0 40px}
+    .search-box{display:flex;gap:10px;max-width:560px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:8px 8px 8px 20px;transition:border-color .2s}
+    .search-box:focus-within{border-color:var(--border-red)}
+    .search-box input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:var(--font-body);font-size:15px}
+    .search-box input::placeholder{color:var(--text-dim)}
+    .search-box select{background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-muted);font-family:var(--font-body);font-size:13px;padding:6px 10px;outline:none;cursor:pointer}
+    .search-hint{font-size:13px;color:var(--text-dim);margin-top:10px}
+    .status-box{text-align:center;padding:60px 20px;color:var(--text-muted);font-size:15px}
+    .spinner{width:36px;height:36px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .profile-section{padding:0 0 80px;display:none}
+    .profile-header{display:flex;align-items:center;gap:24px;padding:32px 0;border-bottom:1px solid var(--border);margin-bottom:32px}
+    .profile-avatar{width:80px;height:80px;border-radius:50%;border:2px solid var(--border-red);overflow:hidden;background:var(--bg-3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:28px;font-weight:700;color:var(--red)}
+    .profile-avatar img{width:100%;height:100%;object-fit:cover}
+    .profile-name{font-family:var(--font-display);font-size:32px;font-weight:700}
+    .profile-tag{font-size:16px;color:var(--text-muted);margin-left:4px}
+    .profile-region{display:inline-block;font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);background:var(--red-glow);border:1px solid var(--border-red);padding:2px 8px;border-radius:var(--radius);margin-top:6px}
+    .profile-rank-badge{margin-left:auto;text-align:center;flex-shrink:0}
+    .rank-img{width:72px;height:72px;object-fit:contain}
+    .rank-name{font-family:var(--font-display);font-size:16px;font-weight:700;margin-top:4px}
+    .rank-rr{font-size:13px;color:var(--text-muted)}
+    .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:32px}
+    .stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 16px;display:flex;flex-direction:column;gap:6px}
+    .stat-label{font-size:11px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+    .stat-value{font-family:var(--font-display);font-size:28px;font-weight:700;color:var(--text);line-height:1}
+    .stat-sub{font-size:12px;color:var(--text-muted)}
+    .stat-good{color:#4CAF50}
+    .stat-bad{color:var(--red)}
+    .section-title{font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px}
+    .agents-list{display:flex;flex-direction:column;gap:10px}
+    .agent-row{display:flex;align-items:center;gap:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 16px}
+    .agent-icon{width:40px;height:40px;border-radius:50%;background:var(--bg-3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+    .agent-info{flex:1}
+    .agent-row-name{font-family:var(--font-display);font-size:16px;font-weight:700}
+    .agent-row-games{font-size:12px;color:var(--text-muted)}
+    .agent-bar-wrap{width:100px;background:var(--bg-3);border-radius:2px;height:4px}
+    .agent-bar{height:4px;border-radius:2px;background:var(--red)}
+    .agent-kd{font-family:var(--font-display);font-size:16px;font-weight:700;min-width:36px;text-align:right}
+    .matches-list{display:flex;flex-direction:column;gap:8px}
+    .match-row{display:flex;align-items:center;gap:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 16px;border-left:3px solid transparent}
+    .match-row.win{border-left-color:#4CAF50}
+    .match-row.loss{border-left-color:var(--red)}
+    .match-row.draw{border-left-color:#FFC857}
+    .match-result{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:.05em;min-width:32px}
+    .match-row.win .match-result{color:#4CAF50}
+    .match-row.loss .match-result{color:var(--red)}
+    .match-row.draw .match-result{color:#FFC857}
+    .match-agent{font-family:var(--font-display);font-size:14px;font-weight:600;min-width:90px}
+    .match-map{font-size:13px;color:var(--text-muted);flex:1}
+    .match-kda{font-family:var(--font-display);font-size:15px;font-weight:700}
+    .match-score{font-size:12px;color:var(--text-muted);min-width:60px;text-align:right}
+    .compare-section{margin-bottom:32px}
+    .compare-search{display:flex;gap:10px;align-items:center;margin-bottom:20px}
+    .compare-input{flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-body);font-size:14px;padding:8px 14px;outline:none;transition:border-color .2s}
+    .compare-input:focus{border-color:var(--border-red)}
+    .compare-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start}
+    .compare-vs{font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--red);padding-top:20px;text-align:center}
+    .compare-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px}
+    .compare-name{font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:14px}
+    .compare-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+    .compare-row:last-child{border-bottom:none}
+    .compare-key{color:var(--text-muted)}
+    .compare-val{font-family:var(--font-display);font-weight:700;font-size:16px}
+    .compare-winner{color:#4CAF50}
+    .compare-loser{color:var(--red)}
+  </style>
 </head>
 <body>
+
 <nav class="nav" id="nav">
   <div class="nav-inner">
     <a href="index.html" class="logo"><span class="logo-mark">V</span><span class="logo-text">ALOGUIDE</span></a>
@@ -16,19 +85,361 @@
       <li><a href="lineups.html" class="nav-link">Lineups</a></li>
       <li><a href="mapas.html" class="nav-link">Mapas</a></li>
       <li><a href="crosshairs.html" class="nav-link">Crosshairs</a></li>
-      <li><a href="stats.html" class="nav-link">Stats</a></li>
+      <li><a href="stats.html" class="nav-link active">Stats</a></li>
       <li><a href="updates.html" class="nav-link">Updates</a></li>
     </ul>
   </div>
 </nav>
-<div class="coming-soon">
-  <div class="coming-soon-inner">
-    <div style="font-size:48px;margin-bottom:20px;">🚧</div>
-    <h1>Em breve</h1>
-    <p>Esta seção está sendo desenvolvida. Volte em breve!</p>
-    <a href="lineups.html" class="btn btn-primary">Ver Lineups</a>
+
+<div class="search-section">
+  <div class="container">
+    <div class="page-eyebrow">Rastreador de Jogadores</div>
+    <h1 class="page-title" style="margin-bottom:24px;">Stats</h1>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Nome#TAG  ex: TenZ#000" autocomplete="off">
+      <select id="regionSelect">
+        <option value="br" selected>BR</option>
+        <option value="latam">LATAM</option>
+        <option value="na">NA</option>
+        <option value="eu">EU</option>
+        <option value="ap">AP</option>
+        <option value="kr">KR</option>
+      </select>
+      <button class="btn btn-primary" id="searchBtn" style="padding:8px 20px;">Buscar</button>
+    </div>
+    <p class="search-hint">Digite o nick e a tag separados por # — ex: <strong style="color:var(--text-muted)">Player#BR1</strong></p>
+    <div id="statusBox" class="status-box" style="display:none;"></div>
   </div>
 </div>
-<script>var nav=document.getElementById('nav');window.addEventListener('scroll',function(){nav.classList.toggle('scrolled',window.scrollY>20);},{passive:true});</script>
+
+<div class="profile-section" id="profileSection">
+  <div class="container">
+    <div class="profile-header">
+      <div class="profile-avatar" id="profileAvatar">?</div>
+      <div>
+        <div class="profile-name">
+          <span id="profileName">—</span><span class="profile-tag" id="profileTag"></span>
+        </div>
+        <div class="profile-region" id="profileRegion">BR</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:8px;" id="profileLevel"></div>
+      </div>
+      <div class="profile-rank-badge" id="rankBadge"></div>
+    </div>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="two-col">
+      <div>
+        <div class="section-title">Agentes mais usados</div>
+        <div class="agents-list" id="agentsList"></div>
+      </div>
+      <div>
+        <div class="section-title">Últimas partidas</div>
+        <div class="matches-list" id="matchesList"></div>
+      </div>
+    </div>
+    <div class="compare-section">
+      <div class="section-title">Comparar jogadores</div>
+      <div class="compare-search">
+        <input class="compare-input" type="text" id="compareInput" placeholder="Nome#TAG do segundo jogador">
+        <select id="compareRegion" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-muted);font-family:var(--font-body);font-size:13px;padding:8px 10px;outline:none;">
+          <option value="br" selected>BR</option>
+          <option value="latam">LATAM</option>
+          <option value="na">NA</option>
+          <option value="eu">EU</option>
+          <option value="ap">AP</option>
+          <option value="kr">KR</option>
+        </select>
+        <button class="btn btn-ghost" id="compareBtn" style="padding:8px 20px;">Comparar</button>
+      </div>
+      <div id="compareResult" style="display:none;">
+        <div class="compare-grid">
+          <div class="compare-card" id="compareP1"></div>
+          <div class="compare-vs">VS</div>
+          <div class="compare-card" id="compareP2"></div>
+        </div>
+      </div>
+      <div id="compareStatus" style="color:var(--text-muted);font-size:14px;margin-top:10px;"></div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>Stats fornecidos pela <a href="https://henrikdev.xyz" style="color:var(--red);">HenrikDev API</a>. VALOGUIDE não é afiliado à Riot Games.</p>
+  </div>
+</footer>
+
+<script>
+var nav = document.getElementById('nav');
+window.addEventListener('scroll', function(){ nav.classList.toggle('scrolled', window.scrollY > 20); }, { passive: true });
+
+var currentPlayer = null;
+
+var RANK_COLORS = {
+  'Iron':'#8B8B8B','Bronze':'#CD7F32','Silver':'#C0C0C0','Gold':'#FFD700',
+  'Platinum':'#00CED1','Diamond':'#B9F2FF','Ascendant':'#00FF87','Immortal':'#FF4655','Radiant':'#FFE97F'
+};
+
+var AGENT_EMOJI = {
+  'Killjoy':'🤖','Jett':'💨','Sage':'💚','Sova':'🏹','Reyna':'🩸','Phoenix':'🔥',
+  'Neon':'⚡','Raze':'💣','Viper':'☠️','Brimstone':'🚀','Omen':'👁️','Astra':'⭐',
+  'Harbor':'🌊','Fade':'🌑','Gekko':'🦎','Deadlock':'🔒','Iso':'🎯','Clove':'🍀','Vyse':'🕷️'
+};
+
+function setStatus(html) {
+  document.getElementById('statusBox').style.display = 'block';
+  document.getElementById('statusBox').innerHTML = html;
+  document.getElementById('profileSection').style.display = 'none';
+}
+
+function showLoading(msg) {
+  setStatus('<div class="spinner"></div><p>' + msg + '</p>');
+}
+
+function showError(msg) {
+  setStatus('<p style="color:var(--red);">⚠️ ' + msg + '</p><p style="color:var(--text-dim);font-size:13px;margin-top:8px;">Verifique o nick/tag e a região selecionada.</p>');
+}
+
+function statCard(label, value, colorClass, sub) {
+  return '<div class="stat-card">'
+    + '<span class="stat-label">' + label + '</span>'
+    + '<span class="stat-value ' + (colorClass||'') + '">' + value + '</span>'
+    + '<span class="stat-sub">' + sub + '</span>'
+    + '</div>';
+}
+
+async function fetchAccount(name, tag) {
+  var r = await fetch('https://api.henrikdev.xyz/valorant/v1/account/' + encodeURIComponent(name) + '/' + encodeURIComponent(tag));
+  return r.ok ? r.json() : null;
+}
+
+async function fetchMMR(region, name, tag) {
+  var r = await fetch('https://api.henrikdev.xyz/valorant/v3/mmr/' + region + '/pc/' + encodeURIComponent(name) + '/' + encodeURIComponent(tag));
+  return r.ok ? r.json() : null;
+}
+
+async function fetchMatches(region, name, tag) {
+  var r = await fetch('https://api.henrikdev.xyz/valorant/v3/matches/' + region + '/' + encodeURIComponent(name) + '/' + encodeURIComponent(tag) + '?size=10');
+  return r.ok ? r.json() : null;
+}
+
+function parseMatches(matches, name) {
+  var kills=0, deaths=0, assists=0, wins=0, hs=0, shots=0;
+  var agentMap = {};
+  var rows = [];
+
+  (matches||[]).forEach(function(m) {
+    var players = m.players && m.players.all_players || [];
+    var me = players.find(function(p){ return p.name && p.name.toLowerCase() === name.toLowerCase(); });
+    if (!me) return;
+    var s = me.stats || {};
+    kills   += s.kills   || 0;
+    deaths  += s.deaths  || 0;
+    assists += s.assists || 0;
+    hs      += s.headshots || 0;
+    shots   += (s.headshots||0) + (s.bodyshots||0) + (s.legshots||0);
+
+    var myTeam = me.team && me.team.toLowerCase();
+    var teams  = m.teams || {};
+    var myScore    = myTeam==='red' ? (teams.red&&teams.red.rounds_won)||0 : (teams.blue&&teams.blue.rounds_won)||0;
+    var otherScore = myTeam==='red' ? (teams.blue&&teams.blue.rounds_won)||0 : (teams.red&&teams.red.rounds_won)||0;
+    var won = myScore > otherScore;
+    if (won) wins++;
+
+    var agent = me.character || '?';
+    if (!agentMap[agent]) agentMap[agent] = { games:0, kills:0, deaths:0 };
+    agentMap[agent].games++;
+    agentMap[agent].kills  += s.kills  || 0;
+    agentMap[agent].deaths += s.deaths || 0;
+
+    rows.push({
+      won: won,
+      draw: myScore === otherScore,
+      agent: agent,
+      map: m.metadata && m.metadata.map || '?',
+      mode: m.metadata && m.metadata.mode || '?',
+      kills: s.kills||0, deaths: s.deaths||0, assists: s.assists||0,
+      score: myScore + ' - ' + otherScore
+    });
+  });
+
+  var total = rows.length || 1;
+  return {
+    kills, deaths, assists, wins, hs, shots, total,
+    kd: deaths > 0 ? (kills/deaths).toFixed(2) : kills.toFixed(2),
+    wr: Math.round((wins/total)*100),
+    hsRate: shots > 0 ? Math.round((hs/shots)*100) : 0,
+    kpr: (kills/total).toFixed(1),
+    agentMap, rows
+  };
+}
+
+async function searchPlayer() {
+  var raw = document.getElementById('searchInput').value.trim();
+  var region = document.getElementById('regionSelect').value;
+  if (!raw) return;
+  var parts = raw.split('#');
+  if (parts.length < 2) { showError('Use o formato Nome#TAG'); return; }
+  var name = parts[0].trim(), tag = parts[1].trim();
+
+  showLoading('Buscando ' + name + '#' + tag + '...');
+
+  try {
+    var accountData = await fetchAccount(name, tag);
+    var mmrData     = await fetchMMR(region, name, tag);
+    var matchData   = await fetchMatches(region, name, tag);
+
+    if (!accountData || accountData.status !== 200) {
+      showError('Jogador não encontrado: ' + name + '#' + tag);
+      return;
+    }
+
+    currentPlayer = { name, tag, region, account: accountData.data, mmr: mmrData, matches: matchData };
+    renderProfile(currentPlayer);
+  } catch(e) {
+    showError('Erro de conexão. Tente novamente.');
+    console.error(e);
+  }
+}
+
+function renderProfile(p) {
+  document.getElementById('statusBox').style.display = 'none';
+  document.getElementById('profileSection').style.display = 'block';
+
+  var acc     = p.account || {};
+  var mmr     = p.mmr && p.mmr.data || {};
+  var matches = p.matches && p.matches.data || [];
+  var stats   = parseMatches(matches, p.name);
+
+  // Header
+  document.getElementById('profileName').textContent = p.name;
+  document.getElementById('profileTag').textContent  = ' #' + p.tag;
+  document.getElementById('profileRegion').textContent = p.region.toUpperCase();
+  if (acc.account_level) document.getElementById('profileLevel').textContent = 'Nível ' + acc.account_level;
+
+  var avatarEl = document.getElementById('profileAvatar');
+  if (acc.card && acc.card.small) {
+    avatarEl.innerHTML = '<img src="' + acc.card.small + '" alt="avatar">';
+  } else {
+    avatarEl.textContent = p.name.charAt(0).toUpperCase();
+  }
+
+  // Rank
+  var rankBadge = document.getElementById('rankBadge');
+  var cur = mmr.current_data || {};
+  var tierName = cur.currenttierpatched || 'Unranked';
+  var rColor = RANK_COLORS[tierName.split(' ')[0]] || '#888';
+  rankBadge.innerHTML =
+    (cur.currenttier ? '<img class="rank-img" src="https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/' + cur.currenttier + '/largeicon.png" onerror="this.style.display=\'none\'">' : '') +
+    '<div class="rank-name" style="color:' + rColor + '">' + tierName + '</div>' +
+    '<div class="rank-rr">' + (cur.ranking_in_tier||0) + ' RR</div>';
+
+  // Stat cards
+  var kdColor = stats.kd >= 1.5 ? 'stat-good' : stats.kd < 1.0 ? 'stat-bad' : '';
+  var wrColor = stats.wr >= 55 ? 'stat-good' : stats.wr < 45 ? 'stat-bad' : '';
+  var peakTier = mmr.highest_rank && mmr.highest_rank.patched_tier || '—';
+  document.getElementById('statsGrid').innerHTML =
+    statCard('K/D', stats.kd, kdColor, stats.kills + 'K / ' + stats.deaths + 'D') +
+    statCard('Winrate', stats.wr + '%', wrColor, stats.wins + ' vitórias de ' + stats.total) +
+    statCard('K / partida', stats.kpr, '', 'últimas ' + stats.total + ' partidas') +
+    statCard('Headshot %', stats.hsRate + '%', stats.hsRate >= 25 ? 'stat-good' : '', stats.hs + ' headshots') +
+    statCard('Peak Rank', peakTier, '', 'melhor rank histórico');
+
+  // Agents
+  var agentArr = Object.entries(stats.agentMap).sort(function(a,b){ return b[1].games - a[1].games; }).slice(0,5);
+  var maxG = agentArr[0] ? agentArr[0][1].games : 1;
+  document.getElementById('agentsList').innerHTML = agentArr.map(function(e){
+    var ag = e[0], d = e[1];
+    var agKD = d.deaths > 0 ? (d.kills/d.deaths).toFixed(2) : d.kills.toFixed(2);
+    var pct  = Math.round((d.games/maxG)*100);
+    var kdColor = agKD >= 1.5 ? '#4CAF50' : agKD < 1.0 ? 'var(--red)' : 'var(--text)';
+    return '<div class="agent-row">'
+      + '<div class="agent-icon">' + (AGENT_EMOJI[ag]||'🎮') + '</div>'
+      + '<div class="agent-info"><div class="agent-row-name">' + ag + '</div><div class="agent-row-games">' + d.games + ' partidas</div></div>'
+      + '<div class="agent-bar-wrap"><div class="agent-bar" style="width:' + pct + '%"></div></div>'
+      + '<div class="agent-kd" style="color:' + kdColor + '">' + agKD + '</div>'
+      + '</div>';
+  }).join('') || '<p style="color:var(--text-dim);font-size:14px;">Sem dados de agentes.</p>';
+
+  // Matches
+  document.getElementById('matchesList').innerHTML = stats.rows.slice(0,8).map(function(m){
+    var cls = m.draw ? 'draw' : m.won ? 'win' : 'loss';
+    var lbl = m.draw ? 'EMP' : m.won ? 'VIT' : 'DER';
+    return '<div class="match-row ' + cls + '">'
+      + '<span class="match-result">' + lbl + '</span>'
+      + '<span class="match-agent">' + m.agent + '</span>'
+      + '<span class="match-map">' + m.map + '</span>'
+      + '<span class="match-kda">' + m.kills + '/' + m.deaths + '/' + m.assists + '</span>'
+      + '<span class="match-score">' + m.score + '</span>'
+      + '</div>';
+  }).join('') || '<p style="color:var(--text-dim);font-size:14px;">Sem partidas recentes.</p>';
+}
+
+// Compare
+async function comparePlayer() {
+  if (!currentPlayer) { document.getElementById('compareStatus').textContent = 'Busque um jogador primeiro.'; return; }
+  var raw = document.getElementById('compareInput').value.trim();
+  var region = document.getElementById('compareRegion').value;
+  if (!raw) return;
+  var parts = raw.split('#');
+  if (parts.length < 2) { document.getElementById('compareStatus').textContent = 'Use o formato Nome#TAG'; return; }
+  var name2 = parts[0].trim(), tag2 = parts[1].trim();
+
+  document.getElementById('compareStatus').textContent = 'Buscando ' + name2 + '...';
+  document.getElementById('compareResult').style.display = 'none';
+
+  try {
+    var acc2   = await fetchAccount(name2, tag2);
+    var mmr2   = await fetchMMR(region, name2, tag2);
+    var match2 = await fetchMatches(region, name2, tag2);
+    if (!acc2 || acc2.status !== 200) { document.getElementById('compareStatus').textContent = 'Jogador não encontrado.'; return; }
+
+    var p2 = { name:name2, tag:tag2, account:acc2.data, mmr:mmr2, matches:match2 };
+    renderCompare(currentPlayer, p2);
+    document.getElementById('compareStatus').textContent = '';
+  } catch(e) {
+    document.getElementById('compareStatus').textContent = 'Erro ao buscar ' + name2;
+  }
+}
+
+function getCompareStats(p) {
+  var matches = p.matches && p.matches.data || [];
+  var s = parseMatches(matches, p.name);
+  var mmrCur = p.mmr && p.mmr.data && p.mmr.data.current_data || {};
+  return {
+    kd: s.kd, wr: s.wr + '%', hs: s.hsRate + '%', kpr: s.kpr,
+    rank: mmrCur.currenttierpatched || 'Unranked'
+  };
+}
+
+function renderCompare(p1, p2) {
+  var s1 = getCompareStats(p1), s2 = getCompareStats(p2);
+  var fields = [
+    { key:'K/D',       v1:s1.kd,   v2:s2.kd,   num:true },
+    { key:'Winrate',   v1:s1.wr,   v2:s2.wr,   num:true },
+    { key:'HS %',      v1:s1.hs,   v2:s2.hs,   num:true },
+    { key:'K/partida', v1:s1.kpr,  v2:s2.kpr,  num:true },
+    { key:'Rank',      v1:s1.rank, v2:s2.rank,  num:false },
+  ];
+
+  function buildCard(name, tag, isP1) {
+    return '<div class="compare-name">' + name + '<span style="color:var(--text-muted);font-size:14px;"> #' + tag + '</span></div>'
+      + fields.map(function(f){
+          var v = isP1 ? f.v1 : f.v2, o = isP1 ? f.v2 : f.v1;
+          var cls = '';
+          if (f.num) { var n=parseFloat(v), m=parseFloat(o); if(!isNaN(n)&&!isNaN(m)) cls = n>m?'compare-winner':n<m?'compare-loser':''; }
+          return '<div class="compare-row"><span class="compare-key">'+f.key+'</span><span class="compare-val '+cls+'">'+v+'</span></div>';
+        }).join('');
+  }
+
+  document.getElementById('compareP1').innerHTML = buildCard(p1.name, p1.tag, true);
+  document.getElementById('compareP2').innerHTML = buildCard(p2.name, p2.tag, false);
+  document.getElementById('compareResult').style.display = 'block';
+}
+
+document.getElementById('searchBtn').addEventListener('click', searchPlayer);
+document.getElementById('compareBtn').addEventListener('click', comparePlayer);
+document.getElementById('searchInput').addEventListener('keydown', function(e){ if(e.key==='Enter') searchPlayer(); });
+document.getElementById('compareInput').addEventListener('keydown', function(e){ if(e.key==='Enter') comparePlayer(); });
+</script>
 </body>
 </html>
