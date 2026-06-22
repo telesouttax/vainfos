@@ -207,18 +207,21 @@ function statCard(label, value, colorClass, sub) {
     + '</div>';
 }
 
+var API_KEY = 'HDEV-a7219797-e3bd-4c20-a493-b9ce4931fbf6';
+var HEADERS = { 'Authorization': API_KEY };
+
 async function fetchAccount(name, tag) {
-  var r = await fetch('https://api.henrikdev.xyz/valorant/v1/account/' + encodeURIComponent(name) + '/' + encodeURIComponent(tag));
+  var r = await fetch('https://api.henrikdev.xyz/valorant/v1/account/' + encodeURIComponent(name) + '/' + encodeURIComponent(tag), { headers: HEADERS });
   return r.ok ? r.json() : null;
 }
 
 async function fetchMMR(region, name, tag) {
-  var r = await fetch('https://api.henrikdev.xyz/valorant/v3/mmr/' + region + '/pc/' + encodeURIComponent(name) + '/' + encodeURIComponent(tag));
+  var r = await fetch('https://api.henrikdev.xyz/valorant/v3/mmr/' + region + '/pc/' + encodeURIComponent(name) + '/' + encodeURIComponent(tag), { headers: HEADERS });
   return r.ok ? r.json() : null;
 }
 
 async function fetchMatches(region, name, tag) {
-  var r = await fetch('https://api.henrikdev.xyz/valorant/v3/matches/' + region + '/' + encodeURIComponent(name) + '/' + encodeURIComponent(tag) + '?size=10');
+  var r = await fetch('https://api.henrikdev.xyz/valorant/v3/matches/' + region + '/' + encodeURIComponent(name) + '/' + encodeURIComponent(tag) + '?size=10', { headers: HEADERS });
   return r.ok ? r.json() : null;
 }
 
