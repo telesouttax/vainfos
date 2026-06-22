@@ -3,32 +3,522 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VALOGUIDE</title>
+  <title>Mapas — VALOGUIDE</title>
   <link rel="stylesheet" href="src/styles/main.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    .maps-hero{padding:100px 0 40px;border-bottom:1px solid var(--border)}
+    .maps-hero-inner{display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
+
+    /* MAP SELECTOR */
+    .map-selector{display:flex;gap:10px;flex-wrap:wrap;padding:24px 0;border-bottom:1px solid var(--border);position:sticky;top:60px;background:var(--bg);z-index:10}
+    .map-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;transition:all .2s;min-width:80px}
+    .map-btn:hover{border-color:var(--border-red)}
+    .map-btn.active{border-color:var(--red);background:var(--red-glow)}
+    .map-btn-icon{font-size:22px;line-height:1}
+    .map-btn-name{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:.05em;color:var(--text-muted)}
+    .map-btn.active .map-btn-name{color:var(--red)}
+
+    /* MAIN LAYOUT */
+    .map-main{padding:32px 0 80px}
+    .map-layout{display:grid;grid-template-columns:1fr 380px;gap:28px;align-items:start}
+
+    /* MAP VISUAL */
+    .map-visual-wrap{position:relative}
+    .map-title-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .map-name-big{font-family:var(--font-display);font-size:32px;font-weight:700;letter-spacing:.02em}
+    .map-side-tag{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);padding:4px 10px;border:1px solid var(--border);border-radius:var(--radius)}
+    .map-canvas-wrap{position:relative;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border)}
+    .map-canvas-wrap canvas{display:block;width:100%}
+    .map-legend{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
+    .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted)}
+    .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+    /* CALLOUTS LIST */
+    .callouts-section{margin-top:20px}
+    .callouts-title{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+    .callouts-regions{display:flex;flex-direction:column;gap:12px}
+    .callout-region{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+    .callout-region-header{padding:10px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:background .15s}
+    .callout-region-header:hover{background:var(--bg-3)}
+    .region-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .region-name{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:.05em}
+    .region-count{font-size:12px;color:var(--text-dim);margin-left:auto}
+    .callout-tags{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 12px}
+    .callout-tag{font-size:12px;color:var(--text-muted);background:var(--bg-3);border:1px solid var(--border);padding:3px 10px;border-radius:var(--radius);font-family:var(--font-display);font-weight:600;letter-spacing:.03em}
+
+    /* RIGHT PANEL */
+    .right-panel{display:flex;flex-direction:column;gap:20px}
+
+    /* TIER LIST */
+    .tier-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+    .tier-section-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .tier-section-title{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:.05em}
+    .tier-section-sub{font-size:12px;color:var(--text-muted)}
+    .tier-row{display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border)}
+    .tier-row:last-child{border-bottom:none}
+    .tier-label{width:40px;min-width:40px;height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:18px;font-weight:700;padding:10px 0}
+    .tier-s .tier-label{background:rgba(255,70,85,.15);color:#FF4655}
+    .tier-a .tier-label{background:rgba(255,165,0,.12);color:#FFA500}
+    .tier-b .tier-label{background:rgba(70,200,100,.1);color:#46C864}
+    .tier-c .tier-label{background:rgba(100,100,255,.1);color:#6464FF}
+    .tier-agents{display:flex;flex-wrap:wrap;gap:8px;padding:10px 14px;flex:1}
+    .tier-agent{display:flex;align-items:center;gap:6px;background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius);padding:5px 10px;transition:border-color .15s}
+    .tier-agent:hover{border-color:var(--border-red)}
+    .agent-emoji{font-size:16px}
+    .agent-label{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--text)}
+
+    /* MAP TIPS */
+    .tips-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+    .tips-header{padding:14px 18px;border-bottom:1px solid var(--border)}
+    .tips-title{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:.05em}
+    .tips-list{padding:14px 18px;display:flex;flex-direction:column;gap:10px}
+    .tip-item{display:flex;gap:10px;align-items:flex-start}
+    .tip-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+    .tip-text{font-size:13px;color:var(--text-muted);line-height:1.5}
+  </style>
 </head>
 <body>
+
 <nav class="nav" id="nav">
   <div class="nav-inner">
     <a href="index.html" class="logo"><span class="logo-mark">V</span><span class="logo-text">ALOGUIDE</span></a>
     <ul class="nav-links">
       <li><a href="lineups.html" class="nav-link">Lineups</a></li>
-      <li><a href="mapas.html" class="nav-link">Mapas</a></li>
+      <li><a href="mapas.html" class="nav-link active">Mapas</a></li>
       <li><a href="crosshairs.html" class="nav-link">Crosshairs</a></li>
       <li><a href="stats.html" class="nav-link">Stats</a></li>
       <li><a href="updates.html" class="nav-link">Updates</a></li>
     </ul>
   </div>
 </nav>
-<div class="coming-soon">
-  <div class="coming-soon-inner">
-    <div style="font-size:48px;margin-bottom:20px;">🚧</div>
-    <h1>Em breve</h1>
-    <p>Esta seção está sendo desenvolvida. Volte em breve!</p>
-    <a href="lineups.html" class="btn btn-primary">Ver Lineups</a>
+
+<div class="maps-hero">
+  <div class="container">
+    <div class="maps-hero-inner">
+      <div>
+        <div class="page-eyebrow">Guia de Mapas</div>
+        <h1 class="page-title">Mapas</h1>
+        <p style="color:var(--text-muted);margin-top:8px;max-width:480px;">Callouts, regiões e tier list de agentes para cada mapa do VALORANT.</p>
+      </div>
+    </div>
   </div>
 </div>
-<script>var nav=document.getElementById('nav');window.addEventListener('scroll',function(){nav.classList.toggle('scrolled',window.scrollY>20);},{passive:true});</script>
+
+<!-- MAP SELECTOR -->
+<div class="map-selector container" id="mapSelector"></div>
+
+<!-- MAIN -->
+<div class="map-main">
+  <div class="container">
+    <div class="map-layout">
+      <div class="map-visual-wrap">
+        <div class="map-title-bar">
+          <div class="map-name-big" id="mapNameBig">—</div>
+          <div class="map-side-tag" id="mapSideTag">—</div>
+        </div>
+        <div class="map-canvas-wrap">
+          <canvas id="mapCanvas" width="640" height="400"></canvas>
+        </div>
+        <div class="map-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#FF4655"></div>A Site</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#4db3ff"></div>B Site</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#FFD700"></div>Mid</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#4CAF50"></div>Spawn / Outros</div>
+        </div>
+        <div class="callouts-section">
+          <div class="callouts-title">Callouts por região</div>
+          <div class="callouts-regions" id="calloutsRegions"></div>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div class="tier-section">
+          <div class="tier-section-header">
+            <div class="tier-section-title">Tier List de Agentes</div>
+            <div class="tier-section-sub" id="tierMapName">—</div>
+          </div>
+          <div id="tierList"></div>
+        </div>
+        <div class="tips-section">
+          <div class="tips-header"><div class="tips-title">Dicas do mapa</div></div>
+          <div class="tips-list" id="tipsList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>VALOGUIDE não é afiliado à Riot Games. VALORANT e assets relacionados são propriedade da Riot Games.</p>
+  </div>
+</footer>
+
+<script>
+var nav = document.getElementById('nav');
+window.addEventListener('scroll', function(){ nav.classList.toggle('scrolled', window.scrollY > 20); }, { passive: true });
+
+var AGENT_EMOJI = {
+  'Killjoy':'🤖','Jett':'💨','Sage':'💚','Sova':'🏹','Reyna':'🩸','Phoenix':'🔥',
+  'Neon':'⚡','Raze':'💣','Viper':'☠️','Brimstone':'🚀','Omen':'👁️','Astra':'⭐',
+  'Harbor':'🌊','Fade':'🌑','Gekko':'🦎','Deadlock':'🔒','Iso':'🎯','Clove':'🍀',
+  'Chamber':'🔫','Skye':'🦊','Breach':'⚡','Kay/O':'🤖','Vyse':'🕷️'
+};
+
+var MAPS = [
+  {
+    id:'ascent', name:'Ascent', icon:'🏛️', sides:'ATK / DEF',
+    color:'#4a90d9',
+    tips:[
+      {icon:'💡','text':'Mid control é crucial — quem domina o Mid controla o ritmo do round.'},
+      {icon:'🎯','text':'A Catwalk é um dos ângulos mais perigosos — sempre verifique antes de cruzar.'},
+      {icon:'🛡️','text':'Killjoy é excelente para anchorar o B sozinha enquanto o time toma o A.'},
+      {icon:'⚡','text':'Jett e Reyna dominam duelos no A Main e B Main pelo movimento rápido.'},
+    ],
+    tiers:{
+      S:['Killjoy','Jett','Sova','Omen'],
+      A:['Sage','Reyna','Brimstone','Fade'],
+      B:['Kay/O','Chamber','Skye','Gekko'],
+      C:['Harbor','Phoenix','Neon','Vyse'],
+    },
+    regions:[
+      { name:'A Site', color:'#FF4655', callouts:['A Site','A Main','Catwalk','Ramp','Rafters','Elbow','Boomerang','Garden','CT','Pátio'] },
+      { name:'B Site', color:'#4db3ff', callouts:['B Site','B Main','B Link','Boathouse','Market','CT','Back Site','B Short'] },
+      { name:'Mid', color:'#FFD700', callouts:['Mid','Mid Courtyard','Top Mid','Bottom Mid','B Spawn Link','Pizzaria'] },
+      { name:'Spawn', color:'#4CAF50', callouts:['ATK Spawn','DEF Spawn','A Spawn','B Spawn'] },
+    ],
+    draw: function(ctx, w, h) {
+      var c = this.color;
+      // Background
+      ctx.fillStyle = '#1a1c20'; ctx.fillRect(0,0,w,h);
+      // Grid
+      ctx.strokeStyle = '#2a2d33'; ctx.lineWidth = 0.5;
+      for(var x=0;x<w;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+      for(var y=0;y<h;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+
+      function zone(x,y,wi,hi,col,label,alpha){
+        ctx.globalAlpha=alpha||0.3; ctx.fillStyle=col; ctx.fillRect(x,y,wi,hi);
+        ctx.globalAlpha=0.8; ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.strokeRect(x,y,wi,hi);
+        ctx.globalAlpha=1; ctx.fillStyle='#fff'; ctx.font='bold 12px Rajdhani,sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(label, x+wi/2, y+hi/2);
+      }
+
+      // ATK Spawn
+      zone(20,160,100,80,'#4CAF50','ATK Spawn',0.2);
+      // A Main
+      zone(120,60,100,80,'#FF4655','A Main',0.25);
+      // Catwalk
+      zone(220,60,80,60,'#FF4655','Catwalk',0.2);
+      // A Site
+      zone(300,40,160,130,'#FF4655','A Site',0.35);
+      // Garden
+      zone(300,170,80,60,'#FF4655','Garden',0.2);
+      // Mid
+      zone(200,160,100,80,'#FFD700','Mid',0.35);
+      // B Main
+      zone(120,260,100,80,'#4db3ff','B Main',0.25);
+      // B Link
+      zone(220,240,80,60,'#4db3ff','B Link',0.2);
+      // B Site
+      zone(300,220,160,130,'#4db3ff','B Site',0.35);
+      // CT
+      zone(460,120,120,160,'#9C27B0','CT',0.2);
+      // DEF Spawn
+      zone(530,40,80,80,'#4CAF50','DEF Spawn',0.15);
+      // Market
+      zone(460,280,80,80,'#4db3ff','Market',0.15);
+
+      // Arrows ATK routes
+      ctx.globalAlpha=0.6; ctx.strokeStyle='#FF4655'; ctx.lineWidth=2;
+      ctx.setLineDash([6,4]);
+      ctx.beginPath(); ctx.moveTo(120,200); ctx.lineTo(120,60); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(120,200); ctx.lineTo(120,300); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(220,200); ctx.lineTo(300,200); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha=1;
+
+      // Callout dots
+      var dots=[
+        {x:370,y:100,label:'Rafters',col:'#FF4655'},
+        {x:300,y:80,label:'Elbow',col:'#FF4655'},
+        {x:460,y:170,label:'CT',col:'#9C27B0'},
+        {x:250,y:195,label:'Pizzaria',col:'#FFD700'},
+        {x:370,y:290,label:'Back Site',col:'#4db3ff'},
+      ];
+      dots.forEach(function(d){
+        ctx.fillStyle=d.col; ctx.globalAlpha=0.9;
+        ctx.beginPath(); ctx.arc(d.x,d.y,5,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#fff'; ctx.globalAlpha=1; ctx.font='10px Inter,sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='bottom';
+        ctx.fillText(d.label,d.x,d.y-7);
+      });
+    }
+  },
+  {
+    id:'bind', name:'Bind', icon:'🌴', sides:'ATK / DEF',
+    color:'#e8a030',
+    tips:[
+      {icon:'💡','text':'Bind é o único mapa sem Mid — tudo passa pelos teleportadores.'},
+      {icon:'🎯','text':'Use os teleportes agressivamente para rotações rápidas e flancos.'},
+      {icon:'🛡️','text':'Viper é S-tier aqui — o Toxic Screen no A ou B fecha completamente o site.'},
+      {icon:'⚡','text':'Raze com Satchels domina Showers e Short pela mobilidade vertical.'},
+    ],
+    tiers:{
+      S:['Viper','Raze','Brimstone','Killjoy'],
+      A:['Sova','Omen','Fade','Skye'],
+      B:['Sage','Reyna','Kay/O','Breach'],
+      C:['Harbor','Neon','Phoenix','Vyse'],
+    },
+    regions:[
+      { name:'A Site', color:'#FF4655', callouts:['A Site','A Short','Showers','U-Hall','Elbow','Spawn A','Lamps','CT A'] },
+      { name:'B Site', color:'#4db3ff', callouts:['B Site','B Long','B Short','Hookah','Garden','CT B','Truck'] },
+      { name:'Teleportes', color:'#FFD700', callouts:['TP A→B','TP B→A','Corredor TP'] },
+      { name:'Spawn', color:'#4CAF50', callouts:['ATK Spawn','DEF Spawn'] },
+    ],
+    draw: function(ctx, w, h) {
+      ctx.fillStyle = '#1a1c20'; ctx.fillRect(0,0,w,h);
+      ctx.strokeStyle = '#2a2d33'; ctx.lineWidth = 0.5;
+      for(var x=0;x<w;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+      for(var y=0;y<h;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+
+      function zone(x,y,wi,hi,col,label,alpha){
+        ctx.globalAlpha=alpha||0.3; ctx.fillStyle=col; ctx.fillRect(x,y,wi,hi);
+        ctx.globalAlpha=0.8; ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.strokeRect(x,y,wi,hi);
+        ctx.globalAlpha=1; ctx.fillStyle='#fff'; ctx.font='bold 12px Rajdhani,sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(label, x+wi/2, y+hi/2);
+      }
+
+      zone(20,140,100,80,'#4CAF50','ATK Spawn',0.2);
+      zone(120,60,120,100,'#FF4655','A Short',0.25);
+      zone(240,40,100,80,'#FF4655','Showers',0.3);
+      zone(340,40,160,130,'#FF4655','A Site',0.35);
+      zone(500,40,100,80,'#4CAF50','DEF Spawn A',0.15);
+      zone(120,220,120,100,'#4db3ff','B Long',0.25);
+      zone(240,260,100,80,'#4db3ff','Hookah',0.3);
+      zone(340,220,160,130,'#4db3ff','B Site',0.35);
+      zone(500,260,100,80,'#4CAF50','DEF Spawn B',0.15);
+
+      // Teleporters
+      ctx.globalAlpha=0.8; ctx.fillStyle='#FFD700';
+      ctx.strokeStyle='#FFD700'; ctx.lineWidth=2;
+      ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(240,140); ctx.lineTo(240,260); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha=0.6;
+      ctx.fillRect(228,130,24,20); ctx.fillRect(228,258,24,20);
+      ctx.globalAlpha=1; ctx.fillStyle='#fff'; ctx.font='10px Inter,sans-serif';
+      ctx.textAlign='center';
+      ctx.fillText('TP',240,142); ctx.fillText('TP',240,270);
+
+      var dots=[
+        {x:240,y:90,label:'U-Hall',col:'#FF4655'},
+        {x:420,y:80,label:'CT A',col:'#FF4655'},
+        {x:340,y:300,label:'Truck',col:'#4db3ff'},
+        {x:420,y:300,label:'CT B',col:'#4db3ff'},
+      ];
+      dots.forEach(function(d){
+        ctx.fillStyle=d.col; ctx.globalAlpha=0.9;
+        ctx.beginPath(); ctx.arc(d.x,d.y,5,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#fff'; ctx.globalAlpha=1; ctx.font='10px Inter,sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='bottom';
+        ctx.fillText(d.label,d.x,d.y-7);
+      });
+    }
+  },
+  {
+    id:'haven', name:'Haven', icon:'⛩️', sides:'ATK / DEF',
+    color:'#7b52a1',
+    tips:[
+      {icon:'💡','text':'Haven é o único mapa com 3 sites — defesa tem que cobrir A, B e C ao mesmo tempo.'},
+      {icon:'🎯','text':'Mid (Courtyard) conecta tudo — quem controla o Mid vira a partida.'},
+      {icon:'🛡️','text':'Omen e Brimstone são essenciais para dar smokes nos 3 sites simultaneamente.'},
+      {icon:'⚡','text':'Jett e Reyna dominam duelos no A Long e C Long pelo ritmo agressivo.'},
+    ],
+    tiers:{
+      S:['Omen','Brimstone','Sova','Jett'],
+      A:['Killjoy','Fade','Kay/O','Skye'],
+      B:['Sage','Reyna','Chamber','Gekko'],
+      C:['Harbor','Neon','Phoenix','Vyse'],
+    },
+    regions:[
+      { name:'A Site', color:'#FF4655', callouts:['A Site','A Long','A Short','A Lobby','CT A','Heaven A','A Box'] },
+      { name:'B Site', color:'#4db3ff', callouts:['B Site','B Short','B Long','Mid','Courtyard','CT B'] },
+      { name:'C Site', color:'#FFA500', callouts:['C Site','C Long','C Short','Garage','CT C','C Heaven'] },
+      { name:'Spawn', color:'#4CAF50', callouts:['ATK Spawn','DEF Spawn','Mid Courtyard'] },
+    ],
+    draw: function(ctx, w, h) {
+      ctx.fillStyle = '#1a1c20'; ctx.fillRect(0,0,w,h);
+      ctx.strokeStyle = '#2a2d33'; ctx.lineWidth = 0.5;
+      for(var x=0;x<w;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+      for(var y=0;y<h;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+
+      function zone(x,y,wi,hi,col,label,alpha){
+        ctx.globalAlpha=alpha||0.3; ctx.fillStyle=col; ctx.fillRect(x,y,wi,hi);
+        ctx.globalAlpha=0.8; ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.strokeRect(x,y,wi,hi);
+        ctx.globalAlpha=1; ctx.fillStyle='#fff'; ctx.font='bold 12px Rajdhani,sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(label, x+wi/2, y+hi/2);
+      }
+
+      zone(20,160,100,80,'#4CAF50','ATK Spawn',0.2);
+      zone(120,40,120,100,'#FF4655','A Long',0.25);
+      zone(240,40,140,120,'#FF4655','A Site',0.35);
+      zone(380,40,100,80,'#4CAF50','DEF A',0.15);
+      zone(200,160,120,80,'#FFD700','Courtyard',0.35);
+      zone(240,180,120,80,'#4db3ff','B Site',0.3);
+      zone(380,160,100,80,'#4CAF50','DEF B',0.15);
+      zone(120,280,120,100,'#FFA500','C Long',0.25);
+      zone(240,280,140,120,'#FFA500','C Site',0.35);
+      zone(380,280,100,80,'#4CAF50','DEF C',0.15);
+
+      var dots=[
+        {x:270,y:80,label:'Heaven A',col:'#FF4655'},
+        {x:480,y:60,label:'CT A',col:'#FF4655'},
+        {x:330,y:195,label:'CT B',col:'#4db3ff'},
+        {x:270,y:320,label:'Garage',col:'#FFA500'},
+        {x:480,y:320,label:'CT C',col:'#FFA500'},
+      ];
+      dots.forEach(function(d){
+        ctx.fillStyle=d.col; ctx.globalAlpha=0.9;
+        ctx.beginPath(); ctx.arc(d.x,d.y,5,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#fff'; ctx.globalAlpha=1; ctx.font='10px Inter,sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='bottom';
+        ctx.fillText(d.label,d.x,d.y-7);
+      });
+    }
+  },
+  {
+    id:'split', name:'Split', icon:'🏙️', sides:'ATK / DEF',
+    color:'#e85d5d',
+    tips:[
+      {icon:'💡','text':'Split favorece os Defensores — as entradas são estreitas e fáceis de segurar.'},
+      {icon:'🎯','text':'Mid (Vent) é o ponto mais importante — controlar o Vent conecta A e B.'},
+      {icon:'🛡️','text':'Sage é obrigatória aqui — walls no Ramp e no Heaven mudam o round.'},
+      {icon:'⚡','text':'Raze com Satchel voa pelo Mid e surpreende defensores no B Heaven.'},
+    ],
+    tiers:{
+      S:['Sage','Raze','Omen','Killjoy'],
+      A:['Sova','Brimstone','Viper','Fade'],
+      B:['Jett','Kay/O','Skye','Reyna'],
+      C:['Harbor','Neon','Phoenix','Astra'],
+    },
+    regions:[
+      { name:'A Site', color:'#FF4655', callouts:['A Site','A Main','A Ramp','A Heaven','A Screens','CT A','A Sewer'] },
+      { name:'B Site', color:'#4db3ff', callouts:['B Site','B Main','B Heaven','B Back','CT B','B Alley'] },
+      { name:'Mid', color:'#FFD700', callouts:['Mid','Top Mid','Vent','Mail','Mid Boiler','Underpass'] },
+      { name:'Spawn', color:'#4CAF50', callouts:['ATK Spawn','DEF Spawn'] },
+    ],
+    draw: function(ctx, w, h) {
+      ctx.fillStyle = '#1a1c20'; ctx.fillRect(0,0,w,h);
+      ctx.strokeStyle = '#2a2d33'; ctx.lineWidth = 0.5;
+      for(var x=0;x<w;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+      for(var y=0;y<h;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+
+      function zone(x,y,wi,hi,col,label,alpha){
+        ctx.globalAlpha=alpha||0.3; ctx.fillStyle=col; ctx.fillRect(x,y,wi,hi);
+        ctx.globalAlpha=0.8; ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.strokeRect(x,y,wi,hi);
+        ctx.globalAlpha=1; ctx.fillStyle='#fff'; ctx.font='bold 12px Rajdhani,sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(label, x+wi/2, y+hi/2);
+      }
+
+      zone(20,140,100,80,'#4CAF50','ATK Spawn',0.2);
+      zone(120,40,100,100,'#FF4655','A Ramp',0.25);
+      zone(220,40,160,130,'#FF4655','A Site',0.35);
+      zone(380,40,80,80,'#4CAF50','DEF A',0.15);
+      zone(200,170,120,60,'#FFD700','Mid',0.35);
+      zone(240,220,80,60,'#FFD700','Vent',0.3);
+      zone(120,280,100,100,'#4db3ff','B Main',0.25);
+      zone(220,260,160,130,'#4db3ff','B Site',0.35);
+      zone(380,280,80,80,'#4CAF50','DEF B',0.15);
+
+      // Heaven
+      ctx.globalAlpha=0.2; ctx.fillStyle='#FF4655'; ctx.fillRect(220,40,160,30);
+      ctx.globalAlpha=1; ctx.fillStyle='#FF4655'; ctx.font='10px Inter,sans-serif';
+      ctx.textAlign='center'; ctx.fillText('Heaven',300,55);
+
+      var dots=[
+        {x:300,y:90,label:'Screens',col:'#FF4655'},
+        {x:460,y:60,label:'CT A',col:'#FF4655'},
+        {x:260,y:245,label:'Vent',col:'#FFD700'},
+        {x:300,y:310,label:'B Heaven',col:'#4db3ff'},
+        {x:460,y:310,label:'CT B',col:'#4db3ff'},
+      ];
+      dots.forEach(function(d){
+        ctx.fillStyle=d.col; ctx.globalAlpha=0.9;
+        ctx.beginPath(); ctx.arc(d.x,d.y,5,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#fff'; ctx.globalAlpha=1; ctx.font='10px Inter,sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='bottom';
+        ctx.fillText(d.label,d.x,d.y-7);
+      });
+    }
+  },
+];
+
+var currentMap = 0;
+
+// Build selector
+var sel = document.getElementById('mapSelector');
+MAPS.forEach(function(m, i) {
+  var btn = document.createElement('button');
+  btn.className = 'map-btn' + (i===0?' active':'');
+  btn.innerHTML = '<span class="map-btn-icon">'+m.icon+'</span><span class="map-btn-name">'+m.name+'</span>';
+  btn.addEventListener('click', function(){ selectMap(i); });
+  sel.appendChild(btn);
+});
+
+function selectMap(idx) {
+  currentMap = idx;
+  document.querySelectorAll('.map-btn').forEach(function(b,i){ b.classList.toggle('active', i===idx); });
+  renderMap(MAPS[idx]);
+}
+
+function renderMap(m) {
+  document.getElementById('mapNameBig').textContent = m.name;
+  document.getElementById('mapSideTag').textContent = m.sides;
+  document.getElementById('tierMapName').textContent = m.name;
+
+  // Draw canvas
+  var canvas = document.getElementById('mapCanvas');
+  var ctx = canvas.getContext('2d');
+  m.draw(ctx, canvas.width, canvas.height);
+
+  // Callouts
+  var regionsEl = document.getElementById('calloutsRegions');
+  regionsEl.innerHTML = m.regions.map(function(r) {
+    return '<div class="callout-region">'
+      +'<div class="callout-region-header">'
+      +'<div class="region-dot" style="background:'+r.color+'"></div>'
+      +'<span class="region-name" style="color:'+r.color+'">'+r.name+'</span>'
+      +'<span class="region-count">'+r.callouts.length+' callouts</span>'
+      +'</div>'
+      +'<div class="callout-tags">'+r.callouts.map(function(c){ return '<span class="callout-tag">'+c+'</span>'; }).join('')+'</div>'
+      +'</div>';
+  }).join('');
+
+  // Tier list
+  var tierEl = document.getElementById('tierList');
+  var TIER_LABELS = ['S','A','B','C'];
+  tierEl.innerHTML = TIER_LABELS.map(function(t) {
+    var agents = m.tiers[t] || [];
+    return '<div class="tier-row tier-'+t.toLowerCase()+'">'
+      +'<div class="tier-label">'+t+'</div>'
+      +'<div class="tier-agents">'+agents.map(function(a){
+        return '<div class="tier-agent"><span class="agent-emoji">'+(AGENT_EMOJI[a]||'🎮')+'</span><span class="agent-label">'+a+'</span></div>';
+      }).join('')+'</div>'
+      +'</div>';
+  }).join('');
+
+  // Tips
+  var tipsEl = document.getElementById('tipsList');
+  tipsEl.innerHTML = m.tips.map(function(t){
+    return '<div class="tip-item"><span class="tip-icon">'+t.icon+'</span><span class="tip-text">'+t.text+'</span></div>';
+  }).join('');
+}
+
+renderMap(MAPS[0]);
+</script>
 </body>
 </html>
