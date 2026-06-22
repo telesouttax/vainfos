@@ -3,32 +3,438 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VALOGUIDE</title>
+  <title>Crosshairs — VALOGUIDE</title>
   <link rel="stylesheet" href="src/styles/main.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    .ch-hero{padding:100px 0 40px;border-bottom:1px solid var(--border)}
+    .ch-hero-inner{display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
+
+    /* FILTERS */
+    .ch-filters{position:sticky;top:60px;z-index:10;background:var(--bg);border-bottom:1px solid var(--border);padding:14px 0}
+    .ch-filters-inner{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+    .ch-search{flex:1;min-width:200px;max-width:280px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:7px 14px;color:var(--text);font-family:var(--font-body);font-size:13px;outline:none;transition:border-color .2s}
+    .ch-search:focus{border-color:var(--border-red)}
+    .ch-search::placeholder{color:var(--text-dim)}
+
+    /* GRID */
+    .ch-main{padding:40px 0 80px}
+    .ch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+
+    /* CARD */
+    .ch-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:border-color .2s,transform .2s;display:flex;flex-direction:column}
+    .ch-card:hover{border-color:var(--border-red);transform:translateY(-2px)}
+    .ch-card.pro-card{border-color:rgba(255,70,85,.2)}
+
+    /* PREVIEW */
+    .ch-preview{height:140px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+    .ch-preview canvas{display:block}
+    .pro-badge{position:absolute;top:10px;left:10px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);background:var(--red-glow);border:1px solid var(--border-red);padding:2px 8px;border-radius:var(--radius)}
+    .community-badge{position:absolute;top:10px;left:10px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4db3ff;background:rgba(0,130,255,.15);border:1px solid rgba(0,130,255,.25);padding:2px 8px;border-radius:var(--radius)}
+
+    /* INFO */
+    .ch-info{padding:14px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
+    .ch-name{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text)}
+    .ch-meta{font-size:12px;color:var(--text-muted)}
+    .ch-code-wrap{display:flex;align-items:center;gap:8px;background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px}
+    .ch-code{font-family:monospace;font-size:11px;color:var(--text-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .ch-copy{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--red);cursor:pointer;flex-shrink:0;transition:color .15s;background:none;border:none;padding:0}
+    .ch-copy:hover{color:#fff}
+    .ch-copy.copied{color:#4CAF50}
+    .ch-tags{display:flex;gap:6px;flex-wrap:wrap}
+    .ch-tag{font-size:11px;color:var(--text-dim);background:var(--bg-3);padding:2px 8px;border-radius:var(--radius);border:1px solid var(--border)}
+
+    /* SUBMIT */
+    .submit-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;margin-bottom:40px}
+    .submit-title{font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:6px}
+    .submit-desc{font-size:13px;color:var(--text-muted);margin-bottom:20px}
+    .submit-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .submit-input{background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-body);font-size:13px;padding:9px 14px;outline:none;transition:border-color .2s;width:100%}
+    .submit-input:focus{border-color:var(--border-red)}
+    .submit-input::placeholder{color:var(--text-dim)}
+    .submit-full{grid-column:1/3}
+    .submit-preview-wrap{grid-column:1/3;display:flex;align-items:center;gap:16px}
+    .submit-preview-canvas{background:#1a1a1a;border-radius:var(--radius);border:1px solid var(--border)}
+
+    /* EMPTY */
+    .empty-state{text-align:center;padding:60px 20px;color:var(--text-muted)}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--bg-2);border:1px solid var(--border-red);border-radius:var(--radius-lg);padding:12px 20px;font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text);z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none}
+    .toast.show{transform:translateY(0);opacity:1}
+  </style>
 </head>
 <body>
+
 <nav class="nav" id="nav">
   <div class="nav-inner">
     <a href="index.html" class="logo"><span class="logo-mark">V</span><span class="logo-text">ALOGUIDE</span></a>
     <ul class="nav-links">
       <li><a href="lineups.html" class="nav-link">Lineups</a></li>
       <li><a href="mapas.html" class="nav-link">Mapas</a></li>
-      <li><a href="crosshairs.html" class="nav-link">Crosshairs</a></li>
+      <li><a href="crosshairs.html" class="nav-link active">Crosshairs</a></li>
       <li><a href="stats.html" class="nav-link">Stats</a></li>
       <li><a href="updates.html" class="nav-link">Updates</a></li>
     </ul>
   </div>
 </nav>
-<div class="coming-soon">
-  <div class="coming-soon-inner">
-    <div style="font-size:48px;margin-bottom:20px;">🚧</div>
-    <h1>Em breve</h1>
-    <p>Esta seção está sendo desenvolvida. Volte em breve!</p>
-    <a href="lineups.html" class="btn btn-primary">Ver Lineups</a>
+
+<div class="ch-hero">
+  <div class="container">
+    <div class="ch-hero-inner">
+      <div>
+        <div class="page-eyebrow">Banco de miras</div>
+        <h1 class="page-title">Crosshairs</h1>
+        <p style="color:var(--text-muted);margin-top:8px;max-width:480px;">Miras dos pros e da comunidade com preview visual. Copie o código e cole direto no jogo.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+        <span id="chCount" style="font-family:var(--font-display);font-size:36px;font-weight:700;color:var(--red);">0</span>
+        <span style="font-size:12px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;">crosshairs</span>
+      </div>
+    </div>
   </div>
 </div>
-<script>var nav=document.getElementById('nav');window.addEventListener('scroll',function(){nav.classList.toggle('scrolled',window.scrollY>20);},{passive:true});</script>
+
+<!-- FILTERS -->
+<div class="ch-filters">
+  <div class="container ch-filters-inner">
+    <input class="ch-search" type="text" id="chSearch" placeholder="Buscar por nome ou pro...">
+    <div class="filter-group">
+      <span class="filter-label">Tipo</span>
+      <button class="filter-btn active" data-filter="type" data-value="all">Todos</button>
+      <button class="filter-btn" data-filter="type" data-value="pro">Pros</button>
+      <button class="filter-btn" data-filter="type" data-value="community">Comunidade</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Estilo</span>
+      <button class="filter-btn active" data-filter="style" data-value="all">Todos</button>
+      <button class="filter-btn" data-filter="style" data-value="dot">Ponto</button>
+      <button class="filter-btn" data-filter="style" data-value="cross">Cruz</button>
+      <button class="filter-btn" data-filter="style" data-value="circle">Círculo</button>
+    </div>
+  </div>
+</div>
+
+<div class="ch-main">
+  <div class="container">
+
+    <!-- SUBMIT -->
+    <div class="submit-section">
+      <div class="submit-title">➕ Adicionar crosshair</div>
+      <div class="submit-desc">Cole o código da sua mira para adicioná-la ao banco da comunidade.</div>
+      <div class="submit-form">
+        <input class="submit-input" type="text" id="submitName" placeholder="Seu nick (ex: Player#BR1)">
+        <input class="submit-input" type="text" id="submitCode" placeholder="Código da crosshair (ex: 0;P;h;0;...)">
+        <div class="submit-preview-wrap">
+          <canvas class="submit-preview-canvas" id="submitCanvas" width="120" height="120"></canvas>
+          <div>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">Preview em tempo real</p>
+            <button class="btn btn-primary" onclick="submitCrosshair()" style="padding:8px 20px;">Publicar mira</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRID -->
+    <div class="ch-grid" id="chGrid"></div>
+    <div class="empty-state" id="chEmpty" style="display:none;"><p>Nenhuma crosshair encontrada.</p></div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer class="footer">
+  <div class="container">
+    <p>VALOGUIDE não é afiliado à Riot Games. VALORANT e assets relacionados são propriedade da Riot Games.</p>
+  </div>
+</footer>
+
+<script>
+var nav = document.getElementById('nav');
+window.addEventListener('scroll', function(){ nav.classList.toggle('scrolled', window.scrollY > 20); }, { passive: true });
+
+// ===== CROSSHAIR DATA =====
+// Code format: 0;P;h;0;f;0;0l;4;0o;2;0a;1;0f;0;1b;0
+// We store parsed settings for drawing
+var CROSSHAIRS = [
+  { id:1, name:'TenZ', type:'pro', team:'Sentinels', agent:'Jett',
+    code:'0;P;h;0;f;0;0l;4;0o;2;0a;1;0f;0;1b;0',
+    color:'#00FF00', style:'cross', outline:false, outlineColor:'#000',
+    innerLines:true, innerLen:4, innerThick:2, innerOffset:2, innerAlpha:1,
+    outerLines:false, outerLen:0, outerThick:0, outerOffset:0, outerAlpha:0,
+    dot:false, dotSize:0, dotAlpha:0,
+    tags:['verde','pequena','pro'] },
+  { id:2, name:'Asuna', type:'pro', team:'100 Thieves', agent:'Neon',
+    code:'0;P;c;1;h;0;f;0;0l;3;0o;1;0a;1;0f;0;1b;0',
+    color:'#00FFFF', style:'cross', outline:false, outlineColor:'#000',
+    innerLines:true, innerLen:3, innerThick:2, innerOffset:1, innerAlpha:1,
+    outerLines:false, outerLen:0, outerThick:0, outerOffset:0, outerAlpha:0,
+    dot:false, dotSize:0, dotAlpha:0,
+    tags:['ciano','pequena','pro'] },
+  { id:3, name:'yay', type:'pro', team:'NRG', agent:'Chamber',
+    code:'0;P;h;0;d;1;f;0;0l;4;0o;0;0a;1;0f;0;1b;0',
+    color:'#FFFFFF', style:'cross', outline:true, outlineColor:'#000000',
+    innerLines:true, innerLen:4, innerThick:2, innerOffset:0, innerAlpha:1,
+    outerLines:false, outerLen:0, outerThick:0, outerOffset:0, outerAlpha:0,
+    dot:false, dotSize:0, dotAlpha:0,
+    tags:['branca','outline','pro'] },
+  { id:4, name:'ScreaM', type:'pro', team:'Team Liquid', agent:'Omen',
+    code:'0;P;h;0;f;0;0l;5;0o;2;0a;1;0f;0;1b;0',
+    color:'#FF0000', style:'cross', outline:false, outlineColor:'#000',
+    innerLines:true, innerLen:5, innerThick:2, innerOffset:2, innerAlpha:1,
+    outerLines:false, outerLen:0, outerThick:0, outerOffset:0, outerAlpha:0,
+    dot:false, dotSize:0, dotAlpha:0,
+    tags:['vermelha','grande','pro'] },
+  { id:5, name:'Shroud', type:'pro', team:'—', agent:'—',
+    code:'0;P;c;4;h;0;0l;3;0o;2;0a;1;0f;0;1t;3;1l;0;1o;0;1a;0',
+    color:'#00FF00', style:'dot', outline:false, outlineColor:'#000',
+    innerLines:false, innerLen:0, innerThick:0, innerOffset:0, innerAlpha:0,
+    outerLines:false, outerLen:0, outerThick:0, outerOffset:0, outerAlpha:0,
+    dot:true, dotSize:3, dotAlpha:1,
+    tags:['ponto','verde','minimalista','pro'] },
+  { id:6, name:'cNed', type:'pro', team:'Fnatic', agent:'Jett',
+    code:'0;P;h;0;f;0;0l;3;0o;1;0a;1;0f;0;1b;0',
+    color:'#FFFFFF', style:'cross', outline:false, outlineColor:'#000',
+    innerLines:true, innerLen:3, innerThick:1, innerOffset:1, innerAlpha:1,
+    outerLines:false, outerLen:0, outerThick:0, outerOffset:0, outerAlpha:0,
+    dot:false, dotSize:0, dotAlpha:0,
+    tags:['branca','fina','pro'] },
+  { id:7, name:'Comunidade #1', type:'community', team:'—', agent:'—',
+    code:'0;P;h;0;f;0;0l;2;0o;2;0a;1;0f;0;1b;0',
+    color:'#FF4655', style:'cross', outline:false, outlineColor:'#000',
+    innerLines:true, innerLen:2, innerThick:2, innerOffset:2, innerAlpha:1,
+    outerLines:false, outerLen:0, outerThick:0, outerOffset:0, outerAlpha:0,
+    dot:false, dotSize:0, dotAlpha:0,
+    tags:['vermelha','compacta'] },
+  { id:8, name:'Comunidade #2', type:'community', team:'—', agent:'—',
+    code:'0;P;c;4;h;0;0l;4;0o;3;0a;1;0f;0;1t;3;1l;2;1o;0;1a;1',
+    color:'#FFD700', style:'circle', outline:false, outlineColor:'#000',
+    innerLines:true, innerLen:4, innerThick:2, innerOffset:3, innerAlpha:1,
+    outerLines:true, outerLen:2, outerThick:2, outerOffset:0, outerAlpha:1,
+    dot:false, dotSize:0, dotAlpha:0,
+    tags:['dourada','círculo'] },
+  { id:9, name:'Comunidade #3', type:'community', team:'—', agent:'—',
+    code:'0;P;h;0;d;1;f;0;0l;3;0o;2;0a;1;0f;0;1t;3;1l;0;1o;0;1a;0',
+    color:'#00FFFF', style:'dot', outline:true, outlineColor:'#000000',
+    innerLines:false, innerLen:0, innerThick:0, innerOffset:0, innerAlpha:0,
+    outerLines:false, outerLen:0, outerThick:0, outerOffset:0, outerAlpha:0,
+    dot:true, dotSize:4, dotAlpha:1,
+    tags:['ponto','outline','ciano'] },
+];
+
+// Community submissions stored in memory
+var communitySubmissions = [];
+
+// ===== DRAW CROSSHAIR =====
+function drawCrosshair(canvas, ch) {
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height;
+  var cx = w/2, cy = h/2;
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(0, 0, w, h);
+
+  var color = ch.color || '#00FF00';
+
+  function drawLine(x1,y1,x2,y2,thick,alpha,col) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = col||color;
+    ctx.lineWidth = thick;
+    ctx.lineCap = 'square';
+    ctx.beginPath();
+    ctx.moveTo(x1,y1);
+    ctx.lineTo(x2,y2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawOutlineLine(x1,y1,x2,y2,thick,alpha) {
+    if (ch.outline) drawLine(x1,y1,x2,y2,thick+2,alpha,'#000000');
+    drawLine(x1,y1,x2,y2,thick,alpha);
+  }
+
+  // Inner lines (cross)
+  if (ch.innerLines && ch.innerLen > 0) {
+    var t = ch.innerThick || 2;
+    var len = ch.innerLen * 4;
+    var off = ch.innerOffset * 2;
+    var a = ch.innerAlpha || 1;
+    drawOutlineLine(cx + off, cy, cx + off + len, cy, t, a); // right
+    drawOutlineLine(cx - off, cy, cx - off - len, cy, t, a); // left
+    drawOutlineLine(cx, cy + off, cx, cy + off + len, t, a); // down
+    drawOutlineLine(cx, cy - off, cx, cy - off - len, t, a); // up
+  }
+
+  // Outer lines
+  if (ch.outerLines && ch.outerLen > 0) {
+    var ot = ch.outerThick || 2;
+    var olen = ch.outerLen * 4;
+    var ooff = (ch.innerLen * 4) + (ch.innerOffset * 2) + (ch.outerOffset * 2) + 2;
+    var oa = ch.outerAlpha || 1;
+    drawOutlineLine(cx + ooff, cy, cx + ooff + olen, cy, ot, oa);
+    drawOutlineLine(cx - ooff, cy, cx - ooff - olen, cy, ot, oa);
+    drawOutlineLine(cx, cy + ooff, cx, cy + ooff + olen, ot, oa);
+    drawOutlineLine(cx, cy - ooff, cx, cy - ooff - olen, ot, oa);
+  }
+
+  // Dot
+  if (ch.dot && ch.dotSize > 0) {
+    var ds = ch.dotSize * 2;
+    ctx.save();
+    ctx.globalAlpha = ch.dotAlpha || 1;
+    if (ch.outline) {
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(cx - ds/2 - 1, cy - ds/2 - 1, ds + 2, ds + 2);
+    }
+    ctx.fillStyle = color;
+    ctx.fillRect(cx - ds/2, cy - ds/2, ds, ds);
+    ctx.restore();
+  }
+}
+
+// ===== RENDER CARDS =====
+var activeFilters = { type:'all', style:'all' };
+var searchQuery = '';
+
+function renderCards() {
+  var all = CROSSHAIRS.concat(communitySubmissions);
+  var grid = document.getElementById('chGrid');
+  var empty = document.getElementById('chEmpty');
+
+  var filtered = all.filter(function(ch) {
+    if (activeFilters.type !== 'all' && ch.type !== activeFilters.type) return false;
+    if (activeFilters.style !== 'all' && ch.style !== activeFilters.style) return false;
+    if (searchQuery) {
+      var q = searchQuery.toLowerCase();
+      if (!ch.name.toLowerCase().includes(q) && !(ch.team||'').toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('chCount').textContent = all.length;
+
+  if (!filtered.length) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  grid.innerHTML = filtered.map(function(ch) {
+    var badge = ch.type === 'pro'
+      ? '<span class="pro-badge">⭐ PRO</span>'
+      : '<span class="community-badge">👥 Comunidade</span>';
+    var meta = ch.type === 'pro'
+      ? ch.team + (ch.agent !== '—' ? ' · ' + ch.agent : '')
+      : 'Enviado pela comunidade';
+    return '<div class="ch-card' + (ch.type==='pro'?' pro-card':'') + '" data-id="' + ch.id + '">'
+      + '<div class="ch-preview"><canvas width="200" height="140" data-id="' + ch.id + '"></canvas>' + badge + '</div>'
+      + '<div class="ch-info">'
+      + '<div class="ch-name">' + ch.name + '</div>'
+      + '<div class="ch-meta">' + meta + '</div>'
+      + '<div class="ch-code-wrap">'
+      + '<span class="ch-code">' + ch.code + '</span>'
+      + '<button class="ch-copy" data-code="' + ch.code + '">Copiar</button>'
+      + '</div>'
+      + '<div class="ch-tags">' + (ch.tags||[]).map(function(t){ return '<span class="ch-tag">' + t + '</span>'; }).join('') + '</div>'
+      + '</div></div>';
+  }).join('');
+
+  // Draw all canvases
+  grid.querySelectorAll('canvas[data-id]').forEach(function(canvas) {
+    var id = parseInt(canvas.dataset.id);
+    var ch = all.find(function(x){ return x.id === id; });
+    if (ch) drawCrosshair(canvas, ch);
+  });
+
+  // Copy buttons
+  grid.querySelectorAll('.ch-copy').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var code = btn.dataset.code;
+      navigator.clipboard.writeText(code).then(function() {
+        btn.textContent = '✓ Copiado';
+        btn.classList.add('copied');
+        showToast('✓ Código copiado! Cole em Configurações → Crosshair no VALORANT.');
+        setTimeout(function(){ btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 2000);
+      });
+    });
+  });
+}
+
+// ===== SUBMIT =====
+var submitIdCounter = 100;
+
+function submitCrosshair() {
+  var name = document.getElementById('submitName').value.trim();
+  var code = document.getElementById('submitCode').value.trim();
+  if (!name || !code) { showToast('⚠ Preencha o nick e o código!'); return; }
+
+  var newCh = {
+    id: submitIdCounter++,
+    name: name,
+    type: 'community',
+    team: '—', agent: '—',
+    code: code,
+    color: '#00FF00',
+    style: 'cross',
+    outline: false, outlineColor: '#000',
+    innerLines: true, innerLen: 4, innerThick: 2, innerOffset: 2, innerAlpha: 1,
+    outerLines: false, outerLen: 0, outerThick: 0, outerOffset: 0, outerAlpha: 0,
+    dot: false, dotSize: 0, dotAlpha: 0,
+    tags: ['comunidade']
+  };
+
+  communitySubmissions.push(newCh);
+  document.getElementById('submitName').value = '';
+  document.getElementById('submitCode').value = '';
+  drawCrosshair(document.getElementById('submitCanvas'), { color:'#1a1a1a' });
+  renderCards();
+  showToast('✓ Crosshair adicionada com sucesso!');
+}
+
+// ===== SUBMIT PREVIEW =====
+document.getElementById('submitCode').addEventListener('input', function() {
+  var canvas = document.getElementById('submitCanvas');
+  // Simple live preview — default look
+  drawCrosshair(canvas, {
+    color: '#00FF00',
+    innerLines: true, innerLen: 4, innerThick: 2, innerOffset: 2, innerAlpha: 1,
+    outerLines: false, dot: false,
+    outline: false
+  });
+});
+
+// ===== FILTERS =====
+document.querySelectorAll('.filter-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    btn.closest('.filter-group').querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    activeFilters[btn.dataset.filter] = btn.dataset.value;
+    renderCards();
+  });
+});
+
+document.getElementById('chSearch').addEventListener('input', function() {
+  searchQuery = this.value.trim();
+  renderCards();
+});
+
+// ===== TOAST =====
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+// ===== INIT =====
+drawCrosshair(document.getElementById('submitCanvas'), { color:'#333', innerLines:false, outerLines:false, dot:false, outline:false });
+renderCards();
+</script>
 </body>
 </html>
