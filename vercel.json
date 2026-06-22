@@ -1,0 +1,11 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/lineups", "destination": "/lineups.html" },
+    { "source": "/mapas", "destination": "/mapas.html" },
+    { "source": "/crosshairs", "destination": "/crosshairs.html" },
+    { "source": "/stats", "destination": "/stats.html" },
+    { "source": "/updates", "destination": "/updates.html" },
+    { "source": "/calculadora", "destination": "/calculadora.html" }
+  ]
+}
