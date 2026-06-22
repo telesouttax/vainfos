@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Conta — VALOGUIDE</title>
+  <link rel="stylesheet" href="src/styles/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    .calc-hero{padding:100px 0 40px;border-bottom:1px solid var(--border)}
+    .calc-layout{display:grid;grid-template-columns:1fr 340px;gap:28px;align-items:start;padding:40px 0 80px}
+
+    /* SECTIONS */
+    .calc-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px}
+    .calc-section-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .15s;user-select:none}
+    .calc-section-header:hover{background:var(--bg-3)}
+    .section-icon{font-size:22px;line-height:1}
+    .section-title{font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:.03em;flex:1}
+    .section-total{font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--red)}
+    .section-chevron{font-size:14px;color:var(--text-dim);transition:transform .2s}
+    .section-chevron.open{transform:rotate(180deg)}
+    .calc-section-body{padding:20px}
+
+    /* RANK */
+    .rank-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .rank-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;transition:all .15s}
+    .rank-btn:hover{border-color:var(--border-red)}
+    .rank-btn.selected{border-color:var(--red);background:var(--red-glow)}
+    .rank-emoji{font-size:24px}
+    .rank-name{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--text-muted);text-align:center}
+    .rank-btn.selected .rank-name{color:var(--red)}
+    .rank-val{font-size:11px;color:var(--text-dim)}
+
+    /* AGENTS */
+    .agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+    .agent-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;transition:all .15s;position:relative}
+    .agent-btn:hover{border-color:var(--border-red)}
+    .agent-btn.selected{border-color:var(--red);background:var(--red-glow)}
+    .agent-btn .check{position:absolute;top:4px;right:4px;width:14px;height:14px;border-radius:50%;background:var(--red);display:none;align-items:center;justify-content:center;font-size:9px;color:#fff}
+    .agent-btn.selected .check{display:flex}
+    .agent-btn-emoji{font-size:20px}
+    .agent-btn-name{font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--text-muted);text-align:center}
+    .agent-btn.selected .agent-btn-name{color:var(--red)}
+    .agent-btn-val{font-size:10px;color:var(--text-dim)}
+
+    /* SKINS */
+    .skins-categories{display:flex;flex-direction:column;gap:14px}
+    .skin-category{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-lg)}
+    .skin-cat-color{width:4px;height:40px;border-radius:2px;flex-shrink:0}
+    .skin-cat-info{flex:1}
+    .skin-cat-name{font-family:var(--font-display);font-size:15px;font-weight:700}
+    .skin-cat-price{font-size:12px;color:var(--text-muted)}
+    .skin-counter{display:flex;align-items:center;gap:10px}
+    .counter-btn{width:28px;height:28px;border-radius:50%;background:var(--bg-card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--text-muted);transition:all .15s;line-height:1}
+    .counter-btn:hover{border-color:var(--red);color:var(--red)}
+    .counter-val{font-family:var(--font-display);font-size:18px;font-weight:700;min-width:28px;text-align:center}
+    .skin-subtotal{font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--red);min-width:80px;text-align:right}
+
+    /* EXTRAS */
+    .extras-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .extra-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-lg)}
+    .extra-icon{font-size:18px}
+    .extra-info{flex:1}
+    .extra-name{font-family:var(--font-display);font-size:13px;font-weight:700}
+    .extra-price{font-size:11px;color:var(--text-dim)}
+    .extra-input{width:60px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font-display);font-size:14px;font-weight:700;padding:4px 8px;text-align:center;outline:none}
+    .extra-input:focus{border-color:var(--border-red)}
+
+    /* RESULT PANEL */
+    .result-panel{position:sticky;top:80px;display:flex;flex-direction:column;gap:16px}
+    .result-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+    .result-header{padding:16px 20px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,var(--bg-card),rgba(255,70,85,.06))}
+    .result-label{font-size:11px;color:var(--text-dim);letter-spacing:.15em;text-transform:uppercase;font-weight:500;margin-bottom:6px}
+    .result-total{font-family:var(--font-display);font-size:48px;font-weight:700;color:var(--red);line-height:1}
+    .result-sub{font-size:13px;color:var(--text-muted);margin-top:4px}
+    .result-body{padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+    .result-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+    .result-row:last-child{border-bottom:none}
+    .result-row-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+    .result-row-icon{font-size:16px}
+    .result-row-val{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--text)}
+
+    /* TIER BADGE */
+    .account-tier{padding:16px 20px;display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border)}
+    .tier-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:var(--radius-lg);font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:.05em}
+
+    /* SHARE */
+    .share-btn{width:100%;padding:12px;font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--red);color:#fff;border:none;border-radius:var(--radius-lg);cursor:pointer;transition:background .2s}
+    .share-btn:hover{background:#e03040}
+    .reset-btn{width:100%;padding:10px;font-family:var(--font-display);font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;background:none;color:var(--text-dim);border:1px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;transition:all .2s}
+    .reset-btn:hover{border-color:var(--text-muted);color:var(--text-muted)}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--bg-2);border:1px solid var(--border-red);border-radius:var(--radius-lg);padding:12px 20px;font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text);z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none}
+    .toast.show{transform:translateY(0);opacity:1}
+
+    @media(max-width:900px){.calc-layout{grid-template-columns:1fr}.result-panel{position:static}}
+  </style>
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="logo"><span class="logo-mark">V</span><span class="logo-text">ALOGUIDE</span></a>
+    <ul class="nav-links">
+      <li><a href="lineups.html" class="nav-link">Lineups</a></li>
+      <li><a href="mapas.html" class="nav-link">Mapas</a></li>
+      <li><a href="crosshairs.html" class="nav-link">Crosshairs</a></li>
+      <li><a href="stats.html" class="nav-link">Stats</a></li>
+      <li><a href="updates.html" class="nav-link">Updates</a></li>
+        <li><a href="calculadora.html" class="nav-link" style="color:#FFD700">💰 Calc</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="calc-hero">
+  <div class="container">
+    <div class="page-eyebrow">Ferramenta exclusiva</div>
+    <h1 class="page-title">Calculadora de Conta</h1>
+    <p style="color:var(--text-muted);margin-top:8px;max-width:520px;">Descubra o valor estimado da sua conta VALORANT. Marque o que você tem e veja quanto sua conta vale.</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="calc-layout">
+
+    <!-- LEFT: INPUTS -->
+    <div>
+
+      <!-- RANK -->
+      <div class="calc-section">
+        <div class="calc-section-header" onclick="toggleSection('rank')">
+          <span class="section-icon">🏆</span>
+          <span class="section-title">Rank Atual</span>
+          <span class="section-total" id="rankTotal">R$ 0</span>
+          <span class="section-chevron open" id="rankChevron">▼</span>
+        </div>
+        <div class="calc-section-body" id="rankBody">
+          <div class="rank-grid" id="rankGrid"></div>
+        </div>
+      </div>
+
+      <!-- AGENTS -->
+      <div class="calc-section">
+        <div class="calc-section-header" onclick="toggleSection('agents')">
+          <span class="section-icon">🎭</span>
+          <span class="section-title">Agentes Desbloqueados</span>
+          <span class="section-total" id="agentsTotal">R$ 0</span>
+          <span class="section-chevron open" id="agentsChevron">▼</span>
+        </div>
+        <div class="calc-section-body" id="agentsBody">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Marque todos os agentes que você desbloqueou (exceto os 5 gratuitos).</p>
+          <div class="agents-grid" id="agentsGrid"></div>
+        </div>
+      </div>
+
+      <!-- SKINS -->
+      <div class="calc-section">
+        <div class="calc-section-header" onclick="toggleSection('skins')">
+          <span class="section-icon">🔫</span>
+          <span class="section-title">Skins de Armas</span>
+          <span class="section-total" id="skinsTotal">R$ 0</span>
+          <span class="section-chevron open" id="skinsChevron">▼</span>
+        </div>
+        <div class="calc-section-body" id="skinsBody">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Informe quantas skins você tem de cada raridade.</p>
+          <div class="skins-categories" id="skinsGrid"></div>
+        </div>
+      </div>
+
+      <!-- EXTRAS -->
+      <div class="calc-section">
+        <div class="calc-section-header" onclick="toggleSection('extras')">
+          <span class="section-icon">🎨</span>
+          <span class="section-title">Cosméticos Extras</span>
+          <span class="section-total" id="extrasTotal">R$ 0</span>
+          <span class="section-chevron open" id="extrasChevron">▼</span>
+        </div>
+        <div class="calc-section-body" id="extrasBody">
+          <div class="extras-grid" id="extrasGrid"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: RESULT -->
+    <div class="result-panel">
+      <div class="result-card">
+        <div class="result-header">
+          <div class="result-label">Valor estimado da conta</div>
+          <div class="result-total" id="totalValue">R$ 0</div>
+          <div class="result-sub" id="totalVP">≈ 0 VP gastos</div>
+        </div>
+        <div class="result-body">
+          <div class="result-row">
+            <span class="result-row-label"><span class="result-row-icon">🏆</span>Rank</span>
+            <span class="result-row-val" id="rRank">R$ 0</span>
+          </div>
+          <div class="result-row">
+            <span class="result-row-label"><span class="result-row-icon">🎭</span>Agentes</span>
+            <span class="result-row-val" id="rAgents">R$ 0</span>
+          </div>
+          <div class="result-row">
+            <span class="result-row-label"><span class="result-row-icon">🔫</span>Skins</span>
+            <span class="result-row-val" id="rSkins">R$ 0</span>
+          </div>
+          <div class="result-row">
+            <span class="result-row-label"><span class="result-row-icon">🎨</span>Cosméticos</span>
+            <span class="result-row-val" id="rExtras">R$ 0</span>
+          </div>
+        </div>
+        <div class="account-tier">
+          <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">Classificação da conta</div>
+          <div class="tier-badge" id="accountTierBadge" style="background:rgba(255,255,255,.05);color:var(--text-muted);">— Preencha os dados</div>
+        </div>
+      </div>
+      <button class="share-btn" onclick="shareAccount()">📋 Copiar resumo</button>
+      <button class="reset-btn" onclick="resetAll()">↺ Resetar tudo</button>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer class="footer">
+  <div class="container">
+    <p>Valores estimados com base no mercado de contas. VALOGUIDE não é afiliado à Riot Games.</p>
+  </div>
+</footer>
+
+<script>
+var nav = document.getElementById('nav');
+window.addEventListener('scroll', function(){ nav.classList.toggle('scrolled', window.scrollY > 20); }, {passive:true});
+
+// ===== DATA =====
+var RANKS = [
+  {name:'Sem Rank', emoji:'❓', brl:0, vp:0},
+  {name:'Ferro', emoji:'⚙️', brl:5, vp:0},
+  {name:'Bronze', emoji:'🥉', brl:15, vp:0},
+  {name:'Prata', emoji:'🥈', brl:30, vp:0},
+  {name:'Ouro', emoji:'🥇', brl:60, vp:0},
+  {name:'Platina', emoji:'💠', brl:100, vp:0},
+  {name:'Diamante', emoji:'💎', brl:200, vp:0},
+  {name:'Ascendente', emoji:'🌟', brl:400, vp:0},
+  {name:'Imortal', emoji:'🔮', brl:800, vp:0},
+  {name:'Radiante', emoji:'☀️', brl:2000, vp:0},
+];
+
+var AGENTS = [
+  {name:'Brimstone', emoji:'🚀', brl:20},
+  {name:'Viper', emoji:'☠️', brl:20},
+  {name:'Omen', emoji:'👁️', brl:20},
+  {name:'Killjoy', emoji:'🤖', brl:20},
+  {name:'Cypher', emoji:'🕵️', brl:20},
+  {name:'Sage', emoji:'💚', brl:20},
+  {name:'Sova', emoji:'🏹', brl:20},
+  {name:'Breach', emoji:'⚡', brl:20},
+  {name:'Reyna', emoji:'🩸', brl:20},
+  {name:'Raze', emoji:'💣', brl:20},
+  {name:'Skye', emoji:'🦊', brl:35},
+  {name:'Yoru', emoji:'👻', brl:35},
+  {name:'Astra', emoji:'⭐', brl:35},
+  {name:'Kay/O', emoji:'🤖', brl:35},
+  {name:'Chamber', emoji:'🔫', brl:35},
+  {name:'Neon', emoji:'⚡', brl:35},
+  {name:'Fade', emoji:'🌑', brl:35},
+  {name:'Harbor', emoji:'🌊', brl:35},
+  {name:'Gekko', emoji:'🦎', brl:35},
+  {name:'Deadlock', emoji:'🔒', brl:35},
+  {name:'Iso', emoji:'🎯', brl:35},
+  {name:'Clove', emoji:'🍀', brl:35},
+  {name:'Vyse', emoji:'🕷️', brl:35},
+  {name:'Jett', emoji:'💨', brl:20},
+  {name:'Phoenix', emoji:'🔥', brl:20},
+];
+
+var SKINS = [
+  {name:'Select Edition', rarity:'Select', color:'#4db3ff', brl:25, vp:875},
+  {name:'Deluxe Edition', rarity:'Deluxe', color:'#4CAF50', brl:50, vp:1275},
+  {name:'Premium Edition', rarity:'Premium', color:'#9C27B0', brl:90, vp:1775},
+  {name:'Ultra Edition', rarity:'Ultra', color:'#FFD700', brl:180, vp:2475},
+  {name:'Exclusive Edition', rarity:'Exclusive', color:'#FF4655', brl:350, vp:4350},
+];
+
+var EXTRAS = [
+  {name:'Sprays', emoji:'🎨', unitBrl:5},
+  {name:'Player Cards', emoji:'🃏', unitBrl:10},
+  {name:'Títulos', emoji:'📛', unitBrl:5},
+  {name:'Gun Buddies', emoji:'🐾', unitBrl:15},
+  {name:'Battle Pass', emoji:'📦', unitBrl:50},
+  {name:'Acessórios', emoji:'💼', unitBrl:80},
+];
+
+// ===== STATE =====
+var state = {
+  rank: 0,
+  agents: {},
+  skins: {0:0,1:0,2:0,3:0,4:0},
+  extras: {},
+};
+
+// ===== BUILD UI =====
+// Ranks
+var rankGrid = document.getElementById('rankGrid');
+RANKS.forEach(function(r, i) {
+  var btn = document.createElement('div');
+  btn.className = 'rank-btn' + (i===0?' selected':'');
+  btn.innerHTML = '<span class="rank-emoji">'+r.emoji+'</span><span class="rank-name">'+r.name+'</span><span class="rank-val">R$ '+r.brl+'</span>';
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.rank-btn').forEach(function(b){ b.classList.remove('selected'); });
+    btn.classList.add('selected');
+    state.rank = i;
+    update();
+  });
+  rankGrid.appendChild(btn);
+});
+
+// Agents
+var agentsGrid = document.getElementById('agentsGrid');
+AGENTS.forEach(function(a, i) {
+  var btn = document.createElement('div');
+  btn.className = 'agent-btn';
+  btn.innerHTML = '<span class="check">✓</span><span class="agent-btn-emoji">'+a.emoji+'</span><span class="agent-btn-name">'+a.name+'</span><span class="agent-btn-val">R$ '+a.brl+'</span>';
+  btn.addEventListener('click', function() {
+    btn.classList.toggle('selected');
+    state.agents[i] = btn.classList.contains('selected');
+    update();
+  });
+  agentsGrid.appendChild(btn);
+});
+
+// Skins
+var skinsGrid = document.getElementById('skinsGrid');
+SKINS.forEach(function(s, i) {
+  var row = document.createElement('div');
+  row.className = 'skin-category';
+  row.innerHTML =
+    '<div class="skin-cat-color" style="background:'+s.color+'"></div>'+
+    '<div class="skin-cat-info"><div class="skin-cat-name" style="color:'+s.color+'">'+s.name+'</div><div class="skin-cat-price">R$ '+s.brl+' / skin · '+s.vp+' VP</div></div>'+
+    '<div class="skin-counter">'+
+    '<button class="counter-btn" data-idx="'+i+'" data-op="-">−</button>'+
+    '<span class="counter-val" id="skinVal'+i+'">0</span>'+
+    '<button class="counter-btn" data-idx="'+i+'" data-op="+">+</button>'+
+    '</div>'+
+    '<div class="skin-subtotal" id="skinSub'+i+'">R$ 0</div>';
+  skinsGrid.appendChild(row);
+});
+document.querySelectorAll('.counter-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var idx = parseInt(btn.dataset.idx);
+    var op = btn.dataset.op;
+    state.skins[idx] = Math.max(0, (state.skins[idx]||0) + (op==='+'?1:-1));
+    document.getElementById('skinVal'+idx).textContent = state.skins[idx];
+    document.getElementById('skinSub'+idx).textContent = 'R$ '+(state.skins[idx]*SKINS[idx].brl).toLocaleString('pt-BR');
+    update();
+  });
+});
+
+// Extras
+var extrasGrid = document.getElementById('extrasGrid');
+EXTRAS.forEach(function(e, i) {
+  state.extras[i] = 0;
+  var item = document.createElement('div');
+  item.className = 'extra-item';
+  item.innerHTML =
+    '<span class="extra-icon">'+e.emoji+'</span>'+
+    '<div class="extra-info"><div class="extra-name">'+e.name+'</div><div class="extra-price">R$ '+e.unitBrl+' cada</div></div>'+
+    '<input class="extra-input" type="number" min="0" value="0" id="extra'+i+'" placeholder="0">';
+  extrasGrid.appendChild(item);
+  item.querySelector('input').addEventListener('input', function() {
+    state.extras[i] = parseInt(this.value)||0;
+    update();
+  });
+});
+
+// ===== TOGGLE SECTIONS =====
+function toggleSection(id) {
+  var body = document.getElementById(id+'Body');
+  var chev = document.getElementById(id+'Chevron');
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  chev.classList.toggle('open', !open);
+}
+
+// ===== CALCULATE =====
+function calc() {
+  var rankVal = RANKS[state.rank].brl;
+
+  var agentVal = 0;
+  Object.keys(state.agents).forEach(function(k) {
+    if (state.agents[k]) agentVal += AGENTS[k].brl;
+  });
+
+  var skinVal = 0;
+  Object.keys(state.skins).forEach(function(k) {
+    skinVal += (state.skins[k]||0) * SKINS[k].brl;
+  });
+
+  var extraVal = 0;
+  Object.keys(state.extras).forEach(function(k) {
+    extraVal += (state.extras[k]||0) * EXTRAS[k].unitBrl;
+  });
+
+  var total = rankVal + agentVal + skinVal + extraVal;
+
+  // Estimate VP
+  var vpSkins = 0;
+  Object.keys(state.skins).forEach(function(k) {
+    vpSkins += (state.skins[k]||0) * SKINS[k].vp;
+  });
+
+  return { rankVal, agentVal, skinVal, extraVal, total, vp: vpSkins };
+}
+
+function getAccountTier(total) {
+  if (total < 100)  return {label:'Conta Iniciante',  color:'#888',    bg:'rgba(136,136,136,.1)'};
+  if (total < 300)  return {label:'Conta Casual',     color:'#4CAF50', bg:'rgba(76,175,80,.12)'};
+  if (total < 700)  return {label:'Conta Investida',  color:'#4db3ff', bg:'rgba(77,179,255,.12)'};
+  if (total < 1500) return {label:'Conta Premium',    color:'#9C27B0', bg:'rgba(156,39,176,.12)'};
+  if (total < 3000) return {label:'Conta Valiosa',    color:'#FFD700', bg:'rgba(255,215,0,.12)'};
+  return               {label:'Conta Lendária ☀️',   color:'#FF4655', bg:'rgba(255,70,85,.12)'};
+}
+
+function fmt(n) { return 'R$ ' + n.toLocaleString('pt-BR'); }
+
+function update() {
+  var r = calc();
+
+  // Section totals
+  document.getElementById('rankTotal').textContent    = fmt(r.rankVal);
+  document.getElementById('agentsTotal').textContent  = fmt(r.agentVal);
+  document.getElementById('skinsTotal').textContent   = fmt(r.skinVal);
+  document.getElementById('extrasTotal').textContent  = fmt(r.extraVal);
+
+  // Result panel
+  document.getElementById('totalValue').textContent = fmt(r.total);
+  document.getElementById('totalVP').textContent    = '≈ ' + r.vp.toLocaleString('pt-BR') + ' VP gastos em skins';
+  document.getElementById('rRank').textContent      = fmt(r.rankVal);
+  document.getElementById('rAgents').textContent    = fmt(r.agentVal);
+  document.getElementById('rSkins').textContent     = fmt(r.skinVal);
+  document.getElementById('rExtras').textContent    = fmt(r.extraVal);
+
+  // Tier badge
+  var tier = getAccountTier(r.total);
+  var badge = document.getElementById('accountTierBadge');
+  badge.textContent = tier.label;
+  badge.style.background = tier.bg;
+  badge.style.color = tier.color;
+}
+
+// ===== SHARE =====
+function shareAccount() {
+  var r = calc();
+  var tier = getAccountTier(r.total);
+  var rankName = RANKS[state.rank].name;
+  var agentCount = Object.values(state.agents).filter(Boolean).length;
+  var skinCount = Object.values(state.skins).reduce(function(a,b){return a+b;},0);
+
+  var text =
+    '🎮 Minha conta VALORANT — VALOGUIDE\n' +
+    '━━━━━━━━━━━━━━━━━━\n' +
+    '🏆 Rank: ' + rankName + '\n' +
+    '🎭 Agentes: ' + agentCount + ' desbloqueados\n' +
+    '🔫 Skins: ' + skinCount + ' skins\n' +
+    '━━━━━━━━━━━━━━━━━━\n' +
+    '💰 Valor estimado: ' + fmt(r.total) + '\n' +
+    '🏅 Classificação: ' + tier.label + '\n' +
+    '━━━━━━━━━━━━━━━━━━\n' +
+    '📊 Calculado em vavainfos.vercel.app';
+
+  navigator.clipboard.writeText(text).then(function() {
+    showToast('✓ Resumo copiado! Cole onde quiser.');
+  });
+}
+
+// ===== RESET =====
+function resetAll() {
+  state = { rank:0, agents:{}, skins:{0:0,1:0,2:0,3:0,4:0}, extras:{} };
+  document.querySelectorAll('.rank-btn').forEach(function(b,i){ b.classList.toggle('selected',i===0); });
+  document.querySelectorAll('.agent-btn').forEach(function(b){ b.classList.remove('selected'); });
+  SKINS.forEach(function(_,i){
+    state.skins[i]=0;
+    document.getElementById('skinVal'+i).textContent='0';
+    document.getElementById('skinSub'+i).textContent='R$ 0';
+  });
+  EXTRAS.forEach(function(_,i){
+    state.extras[i]=0;
+    var inp=document.getElementById('extra'+i);
+    if(inp) inp.value='0';
+  });
+  update();
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+update();
+</script>
+</body>
+</html>
