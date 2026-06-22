@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lineups — VALOGUIDE</title>
+  <link rel="stylesheet" href="src/styles/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-mark">V</span>
+      <span class="logo-text">ALOGUIDE</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="lineups.html" class="nav-link active">Lineups</a></li>
+      <li><a href="mapas.html" class="nav-link">Mapas</a></li>
+      <li><a href="crosshairs.html" class="nav-link">Crosshairs</a></li>
+      <li><a href="stats.html" class="nav-link">Stats</a></li>
+      <li><a href="updates.html" class="nav-link">Updates</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="container">
+    <div class="page-header-inner">
+      <div>
+        <div class="page-eyebrow">Guia completo</div>
+        <h1 class="page-title">Lineups</h1>
+        <p style="color:var(--text-muted);margin-top:8px;max-width:480px;">Granadas, molotovs e habilidades pixel-perfect por mapa, agente e site.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+        <span id="lineupCount" style="font-family:var(--font-display);font-size:36px;font-weight:700;color:var(--red);">0</span>
+        <span style="font-size:12px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;">lineups disponíveis</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="filters-bar">
+  <div class="container" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;">
+    <div class="filter-group">
+      <span class="filter-label">Mapa</span>
+      <button class="filter-btn active" data-filter="map" data-value="all">Todos</button>
+      <button class="filter-btn" data-filter="map" data-value="ascent">Ascent</button>
+      <button class="filter-btn" data-filter="map" data-value="bind">Bind</button>
+      <button class="filter-btn" data-filter="map" data-value="haven">Haven</button>
+      <button class="filter-btn" data-filter="map" data-value="split">Split</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Agente</span>
+      <button class="filter-btn active" data-filter="agent" data-value="all">Todos</button>
+      <button class="filter-btn" data-filter="agent" data-value="killjoy">Killjoy</button>
+      <button class="filter-btn" data-filter="agent" data-value="sova">Sova</button>
+      <button class="filter-btn" data-filter="agent" data-value="brimstone">Brimstone</button>
+      <button class="filter-btn" data-filter="agent" data-value="viper">Viper</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Lado</span>
+      <button class="filter-btn active" data-filter="side" data-value="all">Todos</button>
+      <button class="filter-btn" data-filter="side" data-value="atk">Atacante</button>
+      <button class="filter-btn" data-filter="side" data-value="def">Defensor</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Site</span>
+      <button class="filter-btn active" data-filter="site" data-value="all">Todos</button>
+      <button class="filter-btn" data-filter="site" data-value="A">A</button>
+      <button class="filter-btn" data-filter="site" data-value="B">B</button>
+      <button class="filter-btn" data-filter="site" data-value="C">C</button>
+    </div>
+  </div>
+</div>
+
+<div class="lineups-main">
+  <div class="container">
+    <div class="lineups-grid" id="lineupsGrid"></div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <p>Nenhum lineup encontrado com esses filtros.</p>
+      <button class="btn btn-ghost" onclick="resetFilters()" style="margin-top:16px;">Limpar filtros</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle">—</h2>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-media" id="modalMedia"></div>
+    <div class="modal-body">
+      <div id="modalMeta"></div>
+      <div id="modalSteps"></div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>VALOGUIDE não é afiliado à Riot Games. VALORANT e assets relacionados são propriedade da Riot Games.</p>
+  </div>
+</footer>
+
+<script>
+var AGENT_COLORS = {
+  killjoy:'#FFC857', sage:'#4ECDC4', sova:'#1D8CF8',
+  brimstone:'#FF6B35', viper:'#4CAF50', jett:'#00BCD4', fade:'#9C27B0'
+};
+var DIFF_COLORS = { 'Fácil':'#4CAF50', 'Médio':'#FFC857', 'Difícil':'#FF4655' };
+var MAP_NAMES = { ascent:'Ascent', bind:'Bind', haven:'Haven', split:'Split', fracture:'Fracture', lotus:'Lotus', breeze:'Breeze' };
+
+var LINEUPS = [
+  { id:'kj-asc-nano-elbow', agent:'killjoy', map:'ascent', site:'A', side:'atk', ability:'Nanoswarm', difficulty:'Fácil',
+    title:'Nanoswarm no Elbow do A',
+    desc:'Granada embaixo do box do Elbow — cobre a defesa do plant e é impossível de rebater.',
+    steps:['Fique no corner entre a Ramp e o A Main.','Mire no topo do pilar de pedra à esquerda do pórtico.','Jogue com Walk (shift) — sem pular.','A granada cai exatamente embaixo do box do Elbow.'] },
+  { id:'kj-asc-nano-ct', agent:'killjoy', map:'ascent', site:'A', side:'atk', ability:'Nanoswarm', difficulty:'Médio',
+    title:'Nanoswarm no CT do A',
+    desc:'Cobre o CT e a saída do Pátio — força retake pela Ramp.',
+    steps:['Plante spike no default do A.','Vá para o corner da Boomerang (esquerda do pórtico).','Mire na quina superior direita do arco de pedra.','A granada vai cair atrás da caixa do CT.'] },
+  { id:'kj-asc-nano-b', agent:'killjoy', map:'ascent', site:'B', side:'atk', ability:'Nanoswarm', difficulty:'Médio',
+    title:'Nanoswarm no Back do B',
+    desc:'Lineup do B Link — ativa o back site sem expor o body.',
+    steps:['Posicione no B Link, encostado na parede direita.','Mire na borda do telhado da marquise acima.','Clique 1x sem pular.','A granada cai no back site, corner da parede.'] },
+  { id:'sova-asc-recon-a', agent:'sova', map:'ascent', site:'A', side:'atk', ability:'Recon Bolt', difficulty:'Difícil',
+    title:'Recon Bolt no A pela Catwalk',
+    desc:'Dardo de recon da Catwalk — revela A Site, Garden e CT sem expor.',
+    steps:['Suba para a Catwalk, encosto na parede do fundo.','Mire levemente acima da antena do telhado à direita.','2 bounces + 1 bar de força.','O dardo vai bater no teto do A e rolar pelo site.'] },
+  { id:'brim-bind-smoke-a', agent:'brimstone', map:'bind', site:'A', side:'atk', ability:'Sky Smoke', difficulty:'Fácil',
+    title:'Smokes padrão do A de Bind',
+    desc:'Fecha Showers, U-Hall e Elbow — take padrão do A sem contest.',
+    steps:['Fique no A Short, encostado na parede esquerda.','Abra o mapa de smokes.','Coloque smoke em Showers, U-Hall e Elbow.','Jogue os 3 juntos e push imediato.'] },
+  { id:'viper-split-screen', agent:'viper', map:'split', site:'B', side:'atk', ability:'Toxic Screen', difficulty:'Fácil',
+    title:'Toxic Screen no Mid de Split',
+    desc:'Corta visão do Mid top para B Main — permite push simultâneo.',
+    steps:['Use a Toxic Screen do spawn de Attack.','Direcione da boca do A Lobby até a parede do B Main.','Ative apenas quando o time for pushear.','Combinada com smoke no Vent, o B fica completamente cego.'] },
+  { id:'kj-haven-nano-a', agent:'killjoy', map:'haven', site:'A', side:'atk', ability:'Nanoswarm', difficulty:'Médio',
+    title:'Nanoswarm no CT do A de Haven',
+    desc:'Cobre CT e Long — força retake pela Box ou garage.',
+    steps:['Plante no default do A Site de Haven.','Recue para A Long, corner da parede direita.','Mire no LED da luminária acima do pórtico.','A granada vai pousar atrás da caixa do CT.'] },
+  { id:'sova-bind-shock', agent:'sova', map:'bind', site:'A', side:'atk', ability:'Shock Bolt', difficulty:'Difícil',
+    title:'Shock Bolt Double Bounce no Showers',
+    desc:'Dano garantido em quem planta no default — 2 bounces pela parede.',
+    steps:['Fique no A Short, encosto na caixa de madeira.','Mire na quina superior da parede ao lado da porta de Showers.','2 bounces + força máxima.','O shock vai detonar no default plant do A.'] },
+];
+
+var filters = { map:'all', agent:'all', side:'all', site:'all' };
+
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+function thumb(l) {
+  var c = AGENT_COLORS[l.agent]||'#FF4655';
+  return '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#1e2024,'+c+'18);">'
+    +'<svg viewBox="0 0 40 40" width="36" height="36" fill="none">'
+    +'<circle cx="20" cy="20" r="9" stroke="'+c+'" stroke-width="1.5" opacity=".7"/>'
+    +'<circle cx="20" cy="20" r="3" fill="'+c+'" opacity=".9"/>'
+    +'<line x1="20" y1="11" x2="20" y2="3" stroke="'+c+'" stroke-width="1" opacity=".4"/>'
+    +'<line x1="20" y1="37" x2="20" y2="29" stroke="'+c+'" stroke-width="1" opacity=".4"/>'
+    +'<line x1="11" y1="20" x2="3" y2="20" stroke="'+c+'" stroke-width="1" opacity=".4"/>'
+    +'<line x1="37" y1="20" x2="29" y2="20" stroke="'+c+'" stroke-width="1" opacity=".4"/>'
+    +'</svg>'
+    +'<span style="font-family:Rajdhani,sans-serif;font-size:11px;color:'+c+';opacity:.6;letter-spacing:.1em;text-transform:uppercase;">'+(MAP_NAMES[l.map]||l.map)+' · '+l.site+'</span>'
+    +'</div>';
+}
+
+function buildCard(l) {
+  var c = AGENT_COLORS[l.agent]||'#FF4655';
+  var sc = l.side==='atk'?'side-atk':'side-def';
+  var sl = l.side==='atk'?'ATK':'DEF';
+  return '<div class="lineup-card" data-id="'+l.id+'">'
+    +'<div class="lineup-thumb">'+thumb(l)
+    +'<span class="lineup-map-badge">'+(MAP_NAMES[l.map]||l.map)+' · '+l.site+'</span>'
+    +'<span class="lineup-side-badge '+sc+'">'+sl+'</span>'
+    +'<div class="lineup-play"><div class="play-icon"><svg viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg></div></div>'
+    +'</div>'
+    +'<div class="lineup-info">'
+    +'<div class="lineup-agent-row">'
+    +'<span class="agent-dot" style="background:'+c+';"></span>'
+    +'<span class="agent-name">'+cap(l.agent)+'</span>'
+    +'<span class="ability-badge">'+l.ability+'</span>'
+    +'</div>'
+    +'<h3 class="lineup-title">'+l.title+'</h3>'
+    +'<p class="lineup-desc">'+l.desc+'</p>'
+    +'</div></div>';
+}
+
+function render() {
+  var grid = document.getElementById('lineupsGrid');
+  var empty = document.getElementById('emptyState');
+  var results = LINEUPS.filter(function(l){
+    if(filters.map!=='all' && l.map!==filters.map) return false;
+    if(filters.agent!=='all' && l.agent!==filters.agent) return false;
+    if(filters.side!=='all' && l.side!==filters.side) return false;
+    if(filters.site!=='all' && l.site!==filters.site) return false;
+    return true;
+  });
+  document.getElementById('lineupCount').textContent = results.length;
+  if(!results.length){ grid.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  grid.innerHTML = results.map(buildCard).join('');
+  grid.querySelectorAll('.lineup-card').forEach(function(card){
+    card.addEventListener('click', function(){
+      var l = LINEUPS.find(function(x){ return x.id===card.dataset.id; });
+      if(l) openModal(l);
+    });
+  });
+}
+
+function openModal(l) {
+  var c = AGENT_COLORS[l.agent]||'#FF4655';
+  document.getElementById('modalTitle').textContent = l.title;
+  document.getElementById('modalMedia').innerHTML =
+    '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:32px;width:100%;">'
+    +'<svg viewBox="0 0 60 60" width="56" height="56" fill="none">'
+    +'<circle cx="30" cy="30" r="14" stroke="'+c+'" stroke-width="2" opacity=".6"/>'
+    +'<circle cx="30" cy="30" r="5" fill="'+c+'" opacity=".9"/>'
+    +'<line x1="30" y1="16" x2="30" y2="4" stroke="'+c+'" stroke-width="1.5" opacity=".5"/>'
+    +'<line x1="30" y1="56" x2="30" y2="44" stroke="'+c+'" stroke-width="1.5" opacity=".5"/>'
+    +'<line x1="16" y1="30" x2="4" y2="30" stroke="'+c+'" stroke-width="1.5" opacity=".5"/>'
+    +'<line x1="56" y1="30" x2="44" y2="30" stroke="'+c+'" stroke-width="1.5" opacity=".5"/>'
+    +'</svg>'
+    +'<span style="font-family:Rajdhani,sans-serif;font-size:12px;color:#7a7870;letter-spacing:.1em;text-transform:uppercase;">Vídeo em breve</span>'
+    +'</div>';
+  document.getElementById('modalMeta').innerHTML =
+    row('Agente','<span style="color:'+c+'">'+cap(l.agent)+'</span>')
+    +row('Habilidade',l.ability)
+    +row('Mapa',MAP_NAMES[l.map]||l.map)
+    +row('Site',l.site)
+    +row('Lado',l.side==='atk'?'🟠 Atacante':'🔵 Defensor')
+    +'<div class="meta-row" style="border-bottom:none">'+
+    '<span class="meta-key">Dificuldade</span>'+
+    '<span class="meta-val" style="color:'+(DIFF_COLORS[l.difficulty]||'var(--text)')+'">'+l.difficulty+'</span></div>';
+  document.getElementById('modalSteps').innerHTML =
+    '<p style="font-family:Rajdhani,sans-serif;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#4a4845;margin-bottom:8px;">Como executar</p>'
+    +l.steps.map(function(s,i){
+      return '<div class="step-item"><span class="step-num">'+(i+1)+'</span><span class="step-text">'+s+'</span></div>';
+    }).join('');
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function row(k,v){ return '<div class="meta-row"><span class="meta-key">'+k+'</span><span class="meta-val">'+v+'</span></div>'; }
+
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; }
+
+window.resetFilters = function(){
+  filters={map:'all',agent:'all',side:'all',site:'all'};
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.toggle('active',b.dataset.value==='all'); });
+  render();
+};
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeModal(); });
+
+document.querySelectorAll('.filter-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    btn.closest('.filter-group').querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    filters[btn.dataset.filter]=btn.dataset.value;
+    render();
+  });
+});
+
+var nav=document.getElementById('nav');
+window.addEventListener('scroll',function(){ nav.classList.toggle('scrolled',window.scrollY>20); },{passive:true});
+
+render();
+</script>
+</body>
+</html>
