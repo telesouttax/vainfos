@@ -105,6 +105,7 @@
       <button class="filter-btn active" data-filter="type" data-value="all">Todos</button>
       <button class="filter-btn" data-filter="type" data-value="pro">Pros</button>
       <button class="filter-btn" data-filter="type" data-value="community">Comunidade</button>
+      <button class="filter-btn" data-filter="type" data-value="funny">😂 Zoadas</button>
     </div>
     <div class="filter-group">
       <span class="filter-label">Estilo</span>
@@ -222,6 +223,63 @@ var CROSSHAIRS = [
     outerLines:false, outerLen:0, outerThick:0, outerOffset:0, outerAlpha:0,
     dot:true, dotSize:4, dotAlpha:1,
     tags:['ponto','outline','ciano'] },
+
+  // ===== ZOADAS =====
+  { id:10, name:'A Mira do Cego', type:'funny', team:'—', agent:'—',
+    code:'0;P;h;0;f;0;0l;20;0o;15;0a;1;0f;0;1b;0',
+    color:'#FF00FF', style:'cross', outline:false, outlineColor:'#000',
+    innerLines:true, innerLen:20, innerThick:4, innerOffset:15, innerAlpha:1,
+    outerLines:false, outerLen:0, outerThick:0, outerOffset:0, outerAlpha:0,
+    dot:false, dotSize:0, dotAlpha:0,
+    tags:['zoada','gigante','pink','impossivel'] },
+
+  { id:11, name:'O Nada', type:'funny', team:'—', agent:'—',
+    code:'0;P;h;0;f;0;0l;0;0o;0;0a;0;0f;0;1b;0',
+    color:'#FFFFFF', style:'dot', outline:false, outlineColor:'#000',
+    innerLines:false, innerLen:0, innerThick:0, innerOffset:0, innerAlpha:0,
+    outerLines:false, outerLen:0, outerThick:0, outerOffset:0, outerAlpha:0,
+    dot:false, dotSize:0, dotAlpha:0,
+    tags:['zoada','invisivel','sem mira','lendaria'] },
+
+  { id:12, name:'Estrela da Morte', type:'funny', team:'—', agent:'—',
+    code:'0;P;h;0;f;0;0l;15;0o;0;0a;1;0f;0;1t;3;1l;15;1o;0;1a;1',
+    color:'#FF0000', style:'cross', outline:true, outlineColor:'#000000',
+    innerLines:true, innerLen:15, innerThick:3, innerOffset:0, innerAlpha:1,
+    outerLines:true, outerLen:15, outerThick:3, outerOffset:0, outerAlpha:1,
+    dot:true, dotSize:3, dotAlpha:1,
+    tags:['zoada','enorme','vermelha','estrela'] },
+
+  { id:13, name:'Ponto Quantico', type:'funny', team:'—', agent:'—',
+    code:'0;P;c;4;h;0;0l;0;0o;0;0a;0;0f;0;1t;3;1l;0;1o;0;1a;0',
+    color:'#FFFF00', style:'dot', outline:false, outlineColor:'#000',
+    innerLines:false, innerLen:0, innerThick:0, innerOffset:0, innerAlpha:0,
+    outerLines:false, outerLen:0, outerThick:0, outerOffset:0, outerAlpha:0,
+    dot:true, dotSize:1, dotAlpha:1,
+    tags:['zoada','minuscula','amarela','impossivel de ver'] },
+
+  { id:14, name:'Cruz do Juizo Final', type:'funny', team:'—', agent:'—',
+    code:'0;P;h;0;f;0;0l;30;0o;0;0a;1;0f;0;1b;0',
+    color:'#FF6600', style:'cross', outline:true, outlineColor:'#000000',
+    innerLines:true, innerLen:30, innerThick:6, innerOffset:0, innerAlpha:1,
+    outerLines:false, outerLen:0, outerThick:0, outerOffset:0, outerAlpha:0,
+    dot:true, dotSize:4, dotAlpha:1,
+    tags:['zoada','absurda','laranja','enorme'] },
+
+  { id:15, name:'So os Corajosos', type:'funny', team:'—', agent:'—',
+    code:'0;P;h;0;f;0;0l;1;0o;0;0a;1;0f;0;1b;0',
+    color:'#00FF00', style:'cross', outline:true, outlineColor:'#FF0000',
+    innerLines:true, innerLen:1, innerThick:1, innerOffset:0, innerAlpha:1,
+    outerLines:false, outerLen:0, outerThick:0, outerOffset:0, outerAlpha:0,
+    dot:true, dotSize:1, dotAlpha:1,
+    tags:['zoada','minuscula','verde','pro players only'] },
+
+  { id:16, name:'Pink Guy', type:'funny', team:'—', agent:'—',
+    code:'0;P;h;0;f;0;0l;8;0o;5;0a;0;5;0f;0;1t;3;1l;8;1o;5;1a;0;5',
+    color:'#FF69B4', style:'circle', outline:false, outlineColor:'#000',
+    innerLines:true, innerLen:8, innerThick:4, innerOffset:5, innerAlpha:0.6,
+    outerLines:true, outerLen:8, outerThick:4, outerOffset:5, outerAlpha:0.6,
+    dot:true, dotSize:3, dotAlpha:1,
+    tags:['zoada','pink','transparente','confusa'] },
 ];
 
 // Community submissions stored in memory
@@ -327,9 +385,13 @@ function renderCards() {
   grid.innerHTML = filtered.map(function(ch) {
     var badge = ch.type === 'pro'
       ? '<span class="pro-badge">⭐ PRO</span>'
+      : ch.type === 'funny'
+      ? '<span style="position:absolute;top:10px;left:10px;font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#FFD700;background:rgba(255,215,0,.15);border:1px solid rgba(255,215,0,.3);padding:2px 8px;border-radius:var(--radius)">😂 Zoada</span>'
       : '<span class="community-badge">👥 Comunidade</span>';
     var meta = ch.type === 'pro'
       ? ch.team + (ch.agent !== '—' ? ' · ' + ch.agent : '')
+      : ch.type === 'funny'
+      ? 'Mira zoada — use por sua conta e risco 😂'
       : 'Enviado pela comunidade';
     return '<div class="ch-card' + (ch.type==='pro'?' pro-card':'') + '" data-id="' + ch.id + '">'
       + '<div class="ch-preview"><canvas width="200" height="140" data-id="' + ch.id + '"></canvas>' + badge + '</div>'
